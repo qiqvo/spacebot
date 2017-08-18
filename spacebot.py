@@ -1,8 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
-#
-# Simple Bot to send timed Telegram messages
-# This program is dedicated to the public domain under the CC0 license.
+
 """
 Basics are copied from:
 https://github.com/python-telegram-bot/python-telegram-bot/blob/master/examples/timerbot.py
@@ -10,6 +8,7 @@ and
 https://github.com/elamperti/spacebot/blob/master/spacebot.py
 """
 
+import os
 import telegram
 from telegram.ext import Updater, CommandHandler, Job
 import logging
@@ -27,7 +26,9 @@ logger = logging.getLogger(__name__)
 
 user_timezone = ''
 str_user_alarm_minutes_before = 'user_alarm_minutes_before'
-IDs_in_work = []
+ids_in_work_file = 'IDs.lst'
+subscribers = 'subscribers.lst'
+
 
 # Define a few command handlers. These usually take the two arguments bot and
 # update. Error handlers also receive the raised TelegramError object in error.
@@ -58,14 +59,14 @@ def timezone(bot, update, args):
 
 	except Exception as e:
 		logging.error(str(e))
-		user_timezone = 'UTC'
+		user_timezone = '+00:00'
 		update.message.reply_text('Something went wrong. Try to enter it once more')
 
 
 # context = [chat_id, event]
 def SendNotif(bot, job):
 	"""Function to send the alarm message"""
-	SendNotif(bot, chat_id, event)
+	SendNotif(bot, job.context[0], job.context[1])
 
 def SendNotif(bot, chat_id, event):
 	msg = generate_msg(event)
@@ -78,6 +79,7 @@ def create_link(mode, next):
 # todo add "many"
 def get_next_events(many): # many
 	logging.info("Fetching launches!")
+	
 	r = requests.get(create_link('verbose', str(many))) # add many 
 	events_lst = []
 
@@ -178,7 +180,25 @@ def set_alarm(bot, update, args, chat_data):
 
 
 def main():
-	updater = Updater("TOKEN")
+
+	# todo cache 10 next launches and update them every day
+	# todo probability coefs
+	# todo if no vid, send pic 
+	# todo user settings: if to send msgs without videos
+	# 					  if to send uncertain launches
+	# 					  if to send pictures in what resolution is preferable
+	# todo make subscriber list and 
+	#      send them all the notification in 30 mins
+	# todo make available more info about the launch 
+	#	   maybe send launch id and make a func '/more_info id 1234'
+	# todo make a full python lib for the source site ;;launchlibrary;;
+
+	token = ''
+	if os.path.isfile('_token.token'):
+            with open('_token.token', 'r') as tokenFile:
+                token = tokenFile.read().replace('\n', '')
+
+	updater = Updater(token)
 
 	# Get the dispatcher to register handlers
 	dp = updater.dispatcher
