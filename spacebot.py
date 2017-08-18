@@ -1,199 +1,226 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# Simple Bot to send timed Telegram messages
+# This program is dedicated to the public domain under the CC0 license.
+"""
+Basics are copied from:
+https://github.com/python-telegram-bot/python-telegram-bot/blob/master/examples/timerbot.py
+and 
+https://github.com/elamperti/spacebot/blob/master/spacebot.py
+"""
 
-import os
-import logging
-from apscheduler.schedulers.background import BackgroundScheduler
-import arrow
-from time import sleep
-import requests
 import telegram
-from telegram.error import NetworkError, Unauthorized
+from telegram.ext import Updater, CommandHandler, Job
+import logging
+import arrow
+import datetime
+import requests
 from emoji import emojize
 
-update_id = None
-the_bot_name = 'SqueedlyspoochBot'
-token = ''
 
-# About subscribers...
-sf = 'subscriber.lst'
-subscriber_list = []
+# Enable logging
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+					level=logging.INFO)
 
-# The logger
-log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-logging.basicConfig(level=logging.WARN, format=log_format)
+logger = logging.getLogger(__name__)
 
-# Start a background scheduler
-scheduler = BackgroundScheduler()
+user_timezone = ''
+str_user_alarm_minutes_before = 'user_alarm_minutes_before'
+IDs_in_work = []
+
+# Define a few command handlers. These usually take the two arguments bot and
+# update. Error handlers also receive the raised TelegramError object in error.
+def start(bot, update):
+	update.message.reply_text("Hi! Nice to have you on board."
+					"We are to take off the planet at... It's hard to tell not knowing your timezone.")
+	user = update.message.from_user
+	logger.info('new user %s' % user.first_name)
+	help(bot, update)
+
+def help(bot, update):
+	help_message = 'usage: \n' \
+			'/set_timezone -- to set the timezone\n' \
+			'/next         -- to get the following launch\n' \
+			'/next 4       -- to get the following 4 launches\n' \
+			'/set_alarm 5  -- to set alarm on 5 minutes before the launch\n'
+	update.message.reply_text('')
+
+def timezone(bot, update, args):
+	try:
+		if not args[0]:
+			raise Exception('no input in timezone')
+		else:
+			a = arrow.now().replace(tzinfo=args[0])
+			user_timezone = a.tzinfo
+		
+		update.message.reply_text('Set to %s.' % user_timezone)
+
+	except Exception as e:
+		logging.error(str(e))
+		user_timezone = 'UTC'
+		update.message.reply_text('Something went wrong. Try to enter it once more')
+
+
+# context = [chat_id, event]
+def SendNotif(bot, job):
+	"""Function to send the alarm message"""
+	SendNotif(bot, chat_id, event)
+
+def SendNotif(bot, chat_id, event):
+	msg = generate_msg(event)
+	bot.send_message(chat_id, text=msg, parse_mode=telegram.ParseMode.MARKDOWN)
+
+def create_link(mode, next):
+	source = 'https://launchlibrary.net/1.2/launch?'
+	return source + 'mode=' + mode + '&' + 'next=' + next
+
+# todo add "many"
+def get_next_events(many): # many
+	logging.info("Fetching launches!")
+	r = requests.get(create_link('verbose', str(many))) # add many 
+	events_lst = []
+
+	#debug
+	IDs_in_work.clear()
+
+	if r.status_code == 200:
+		for launch in r.json()['launches']:
+			if launch['id'] in IDs_in_work:
+				pass
+			else: 
+				IDs_in_work.append(launch['id'])
+			
+			event = {
+				'id' : launch['id']
+				"when": arrow.get(launch['isonet'], "YYYYMMDDTHHmmss?"),
+				"name": launch['name'],
+				"probability": launch['probability'], # -1 for unknown
+				"urls": launch['vidURLs'],
+				#"pic": launch['rocket']['imageURL'],
+				#"pic_sizes": launch['rocket']['imageSizes'],
+				"missions_count": len(launch['missions']),
+				"description": launch['missions'][0]['description'],
+				#"rocket": launch['rocket']['name']
+				'location': launch['location']['pads'][0]['name'] 
+			}
+			events_lst.append(event)
+
+	return events_lst
+
+
+def generate_msg(props):
+	message =  emojize(":rocket:", use_aliases=True)
+	message += ' **' + props['name'] + '**' + '\n'
+	message += 'A launch will happen ' + props['when'].humanize() + '!'
+	message += ' at ' + props['when'].format('HH:mm') + '\n'
+	message += 'Taking from **' + props['location'] + '**.\n'
+	message += '**Mission description**\n' + props['description'] + '.\n\n'
+
+#	if len(props['description']) > 0:
+#		message += props['description'] + '\n'
+	
+	if len(props['urls']) > 0:
+		message += 'Watch it here: \n'
+		for url in props['urls']:
+			message += '  • ' + url + '\n'
+	else:
+		message += 'Unfortunately there are no reported webcasts ' \
+				   + emojize(':disappointed_relieved:', use_aliases=True)
+	
+	return message
+
+# chat data is needed to implement user settings
+def SendNext(bot, update, chat_data):
+	SendNext(bot, update, [1], chat_data)
+
+def SendNext(bot, update, args, chat_data):
+	many = args[0]
+	events = get_next_events(many)
+	for event in events:
+		SendNotif(bot, update.message.chat_id, event)
+	
+def ScheduleNotification(events, when):
+	for event in events:
+		job = job_queue.run_once(SendNotif,
+			when=when, 
+			context=[chat_id, event])
+
+
+def update(bot, update, job_queue, chat_data):
+	"""Adds a job to the queue"""
+	chat_id = update.message.chat_id
+	try:
+		events = get_next_events()
+		for event in events:
+			try:
+				before_minutes = chat_data[str_user_alarm_minutes_before]
+				job_before_minutes = job_queue.run_once(SendNotif,
+					when=props['when'].shift(minutes=-before_minutes).datetime.replace(tzinfo=None), 
+					context=[chat_id, event])
+				chat_data['job_before_minutes'] = job_before_minutes
+			except KeyError as key_e:
+				pass
+	except Exception as e:
+		logger.error(str(e))
+		update.message.reply_text('Something went wrong!')
+
+
+def error(bot, update, error):
+	logger.warning('Update "%s" caused error "%s"' % (update, error))
+
+def set_alarm(bot, update, args, chat_data):
+	try:
+		before = int(args[0])
+		chat_data[str_user_alarm_minutes_before] = before
+	except ValueError as val_e:
+		update.message.reply_text('Enter integer!')
 
 
 def main():
-    global bot
-    global sf
-    global the_bot_name
-    global token
-    global update_id
+	updater = Updater("TOKEN")
 
-    # Load token from file if undefined
-    if not token:
-        if os.path.isfile('.token'):
-            with open('.token', 'r') as tokenFile:
-                token = tokenFile.read().replace('\n', '')
+	# Get the dispatcher to register handlers
+	dp = updater.dispatcher
 
-    # Load subscriber list from file
-    if os.path.isfile(sf):
-        logging.info("Loading subscribers...")
-        with open(sf, 'r') as subscribers:
-            for id in subscribers.readlines():
-                id = id.replace('\n', '')
-                try:
-                    id = int(id)
-                except:
-                    continue
-                if id not in subscriber_list:
-                    subscriber_list.append(int(id))
+	# on different commands - answer in Telegram
+	dp.add_handler(CommandHandler("start", start))
+	dp.add_handler(CommandHandler("help", start))
+	dp.add_handler(CommandHandler("update", update,
+								  pass_job_queue=True,
+								  pass_chat_data=True))
+	#dp.add_handler(CommandHandler("unset", unset, pass_chat_data=True))
+	
+	dp.add_handler(CommandHandler("set_timezone", timezone, pass_args=True))
+	dp.add_handler(CommandHandler("set_alarm", set_alarm, pass_args=True, pass_chat_data=True))
+	dp.add_handler(CommandHandler('next', SendNext, pass_args=True, pass_chat_data=True))
+	dp.add_handler(CommandHandler('next', SendNext, pass_chat_data=True))
 
-    # Telegram Bot Authorization
-    bot = telegram.Bot(token)
+	# log all errors
+	dp.add_error_handler(error)
 
-    # Get launches
-    fetchLaunches()
-    scheduler.add_job(fetchLaunches, 'interval', minutes=30, max_instances=1,
-                      next_run_time=arrow.now().shift(seconds=5).isoformat())
+	# Start the Bot
+	updater.start_polling()
 
-    # And start the scheduler
-    scheduler.start()
-
-    # get the first pending update_id, this is so we can skip over it in case
-    # we get an "Unauthorized" exception.
-    try:
-        update_id = bot.getUpdates()[0].update_id
-    except IndexError:
-        update_id = None
-
-    while True:
-        try:
-            listenForUpdates(bot)
-        except NetworkError:
-            sleep(5)
-        except Unauthorized:
-            # The user has removed or blocked the bot
-            update_id += 1
-        except (KeyboardInterrupt, SystemExit):
-            logging.info("Quitting")
-            scheduler.shutdown()
-            exit()
-
-
-def listenForUpdates(bot):
-    global sf
-    global update_id
-
-    logging.debug("Listening for updates...")
-
-    # Request updates after the last update_id
-    for update in bot.getUpdates(offset=update_id, timeout=10):
-        update_id = update.update_id + 1
-
-        try:
-            chat_id = int(update.message.chat_id)
-        except:
-            logging.debug('Unrecongnized message:')
-            logging.debug(update.message)
-            continue
-
-        if update.message:  # the bot can receive updates without messages
-            if update.message.text == '/subscribe' or update.message.text == '/subscribe@' + the_bot_name:
-                if chat_id not in subscriber_list:
-                    logging.debug("Adding subscriber %i" % chat_id)
-                    reply_message = 'Subscribed successfully!'
-
-                    subscriber_list.append(chat_id)
-                    with open(sf, 'a') as subscribers:
-                        subscribers.write('\n' + str(chat_id))
-                else:
-                    reply_message = 'You were already subscribed'
-
-                # Reply to the user
-                try: 
-                    update.message.reply_text('You are already subscribed')
-                except Exception as e:
-                    logging.error('Failed to reply on subscription')
-                    logging.error(e)
-
-
-def fetchLaunches():
-    logging.info("Fetching launches!")
-    r = requests.get('https://launchlibrary.net/1.2/launch?mode=verbose')
-
-    if r.status_code == 200:
-        for launch in r.json()['launches']:
-            if scheduler.get_job(str(launch['id'])):
-                job_exists = True
-            else:
-                job_exists = False
-
-            props = {
-                "when": arrow.get(launch['isonet'], "YYYYMMDDTHHmmss?"),
-                "name": launch['name'],
-                "urls": launch['vidURLs']
-            }
-
-            # Shifted time for notification
-            when = props['when'].shift(hours=-1).datetime
-
-            if job_exists:
-                # Remove launches that became uncertain
-                if launch['tbdtime'] == 1 or launch['tbddate'] == 1:
-                    logging.debug("Removing job %s" % launch['id'])
-                    scheduler.remove_job(str(launch['id']))
-                else:
-                    logging.debug("Updating job %s" % launch['id'])
-                    scheduler.reschedule_job(launch['id'],
-                                             trigger='date', run_date=when)
-                    scheduler.modify_job(args=[props])
-
-            # Let's add only certain launches
-            elif launch['tbdtime'] == 0 and launch['tbddate'] == 0:
-                logging.debug("Adding job %s" % launch['id'])
-                scheduler.add_job(notifyLaunch, args=[props],
-                                  id=str(launch['id']),
-                                  trigger='date', run_date=when)
-            else:
-                logging.debug("Skipped %s because conditions weren't met."
-                              % launch['id'])
-
-    else:
-        logging.warning("Error fetching launches (" + r.status_code + ")")
-
-
-def notifyLaunch(props):
-    global bot
-
-    message = emojize(":rocket:", use_aliases=True) + \
-        ' *' + props['name'] + '*' + '\n' \
-        'A launch will happen ' + props['when'].humanize() + '!' \
-        ' (at ' + props['when'].format('HH:mm') + ' UTC)' + '\n'
-
-    if len(props['urls']) > 0:
-        message += 'Where to watch it: \n'
-        for url in props['urls']:
-            message += '  • ' + url + '\n'
-    else:
-        message += 'Unfortunately there are no reported webcasts ' \
-                   + emojize(':disappointed_relieved:', use_aliases=True)
-
-    logging.info("Starting broadcast for %s" % props['name'])
-    for chat_id in subscriber_list:
-        logging.debug("Contacting %s" % chat_id)
-        try:
-            bot.send_message(chat_id, text=message,
-                             parse_mode=telegram.ParseMode.MARKDOWN)
-            sleep(0.04)  # Max. 30 reqs/second
-        except Exception as e:
-            logging.error("Horrible error ahead")
-            logging.error(str(e))
+	# Block until you press Ctrl-C or the process receives SIGINT, SIGTERM or
+	# SIGABRT. This should be used most of the time, since start_polling() is
+	# non-blocking and will stop the bot gracefully.
+	updater.idle()
 
 
 if __name__ == '__main__':
-    main()
+	main()
+
+# def unset(bot, update, chat_data):
+# 	"""Removes the job if the user changed their mind"""
+# 
+# 	if 'job' not in chat_data:
+# 		update.message.reply_text('You have no active timer')
+# 		return
+# 
+# 	job = chat_data['job']
+# 	job.schedule_removal()
+# 	del chat_data['job']
+# 
+# 	update.message.reply_text('Timer successfully unset!')
+
