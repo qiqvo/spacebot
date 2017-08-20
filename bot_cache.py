@@ -9,9 +9,12 @@ and
 https://github.com/elamperti/spacebot/blob/master/spacebot.py
 """
 
-import os
 import hashlib
+import os
+import arrow
+
 from bot_interface import *
+from bot_logging import logger, scheduler, scheduler_datetime
 
 k_cache_size = 100
 cached = dict()
@@ -31,34 +34,46 @@ To follow the sequence of the events  ```ids_seq```
 
 Obtained info may not be not cached yet. 
 So  ```check_up_to_date```  guarantees there is no double caching.
-```update_pos``` operates on ```ids_seq``` to make sure launch time didn't change
 ```get_cached_events```  returns ```events``` list
 							with elements as {'msg':msg}
+
+```remove_cached_by_id``` is scheduled 
+the job to remove cached has 'id' == event['id']
+
 """
 
 # event is cached
 def check_up_to_date(event):
-	c_event_hash = cached[id][0]
+	c_event_hash = cached[id]['fingerprint']
 	_hash = hashlib.sha1(str(event).encode()).hexdigest()
 
 	if c_event_hash != _hash:
+		if event['when'] != cached[event['id']]['when']:
+			scheduler.modify_job(event['id'], 
+				{'next_run_time':scheduler_datetime(event['when'].shift(minutes=1))})
 		cache(event)
-		update_pos(event)
 	
 def cache(event, update_flag=False):
 	fingerprint = hashlib.sha1(str(event).encode()).hexdigest()
-	# if update_flag == True:
-	# 	cached[event['id']]
-	cached[event['id']] = [fingerprint, generate_msg(event)]
+	when = event['when'].timestamp
+	cached[event['id']] = {'fingerprint': fingerprint, 'when':when, 'msg':generate_msg(event)}
 
-def update_pos(event):
-	pass
+def update_sequence(event_ids):
+	ids_seq = event_ids[:]
 
 def get_cached_events(count):
 	events = []
 	i = 0
 	while i != count:
-		msg = cached[ids_seq[i]][1]
+		msg = cached[ids_seq[i]]['msg']
 		events.append({'msg':msg})
 		i += 1
 	return events
+
+def remove_cached_by_id(id):
+	del cached[id]
+	if ids_seq[0] == id:
+		del ids_seq[0]
+	else:
+		logger.error('ID mismatch. ids_seq[0] is not the same as the el to be removed.')
+		logger.error('id %s is ' % id, 'not ' if id not in ids_seq else '', 'present in ids_seq')
