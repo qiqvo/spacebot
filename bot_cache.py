@@ -13,66 +13,52 @@ import os
 import hashlib
 from bot_interface import *
 
-
-cached_ids_filename = 'IDs.lst'
-cache_last_num = 0
-cache_file_format = '.cch'
-cache_sign_file = 'cache.sign'
-dir_cache = os.open('cache', O_RDONLY)
 k_cache_size = 100
-cache_dct = dict()
+cached = dict()
+ids_seq = []
 
-def cache_dir_opener(path, flags):
-	return os.open(path, flags, dir_fd=dir_cache)
 
-def get_event_hash(id):
-	with open(cache_sign_file, 'r') as csf:
-		for line in csf:
-			if line.split()[0] == id:
-				return line.split()[2]
+"""
+Every 5 hours bot makes a server request to obtain new info on the launches.
+The next  ```k_cache_size```  are being cached  to  ```cached```.
+```cached```   key : data
+			   event['id'] : [fingerprint, msg]
+	where msg is   ```generate_msg(event)```
 
-	return ''
+To follow the sequence of the events  ```ids_seq```  
+				stores ids in sequence of the launch time 
+				(as it is uploaded from server)
+
+Obtained info may not be not cached yet. 
+So  ```check_up_to_date```  guarantees there is no double caching.
+```update_pos``` operates on ```ids_seq``` to make sure launch time didn't change
+```get_cached_events```  returns ```events``` list
+							with elements as {'msg':msg}
+"""
 
 # event is cached
 def check_up_to_date(event):
-	c_event_hash = get_event_hash(event['id'])
+	c_event_hash = cached[id][0]
 	_hash = hashlib.sha1(str(event).encode()).hexdigest()
 
 	if c_event_hash != _hash:
-		cache(event, update_flag=True)
+		cache(event)
+		update_pos(event)
 	
-# update_flag == event is needed to be recached
 def cache(event, update_flag=False):
-	filename = ''
-	id = event['id']
-	if update_flag:
-		filename = str(cache_dct[id])
-	else:
-		filename = str(cache_last_num) 
-
-	filename += cache_file_format
 	fingerprint = hashlib.sha1(str(event).encode()).hexdigest()
+	# if update_flag == True:
+	# 	cached[event['id']]
+	cached[event['id']] = [fingerprint, generate_msg(event)]
 
-	with open(filename, 'w', opener=cache_dir_opener) as cf:
-		print(fingerprint, file=cf)
-		print(generate_msg(event), file=cf)
-	
-	if not update_flag:
-		with open(cache_sign_file, 'a') as sf:
-			print(id, cache_last_num, fingerprint, file=sf)
-
-		cache_dct[id] = cache_last_num
-		cache_last_num +=1
+def update_pos(event):
+	pass
 
 def get_cached_events(count):
 	events = []
-	while count > 0:
-		filename = count + cache_file_format
-		msg = ''
-		with open(filename, 'r', opener=cache_dir_opener) as cf:
-			cf.read()
-			for line in cf:
-				msg += line
+	i = 0
+	while i != count:
+		msg = cached[ids_seq[i]][1]
 		events.append({'msg':msg})
-		count -= 1
+		i += 1
 	return events

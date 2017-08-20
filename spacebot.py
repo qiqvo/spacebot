@@ -149,9 +149,7 @@ def help(bot, update):
 
 	
 def main():
-	# todo do not cache offline
-	# todo cache 10 next launches and update them every day
-	# todo issue: for cached files -- if date is changed -- no effect on the queue
+	# todo bot_cache update pos func!
 	# todo clean cached ids as soon as start occured
 	# todo show notif of the ongoing launch mission if one is happening while your first chat 
 	# todo probability coefs
