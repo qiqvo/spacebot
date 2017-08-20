@@ -8,24 +8,17 @@ and
 https://github.com/elamperti/spacebot/blob/master/spacebot.py
 """
 
+import datetime
 import os
-import telegram
-from telegram.ext import Updater, CommandHandler, Job
-
-import logging
 
 import arrow
-import datetime
-
-from apscheduler.schedulers.background import BackgroundScheduler
+import requests
+import telegram
+from telegram.ext import CommandHandler, Job, Updater
 
 from bot_cache import *
 from bot_interface import *
-
-
-# Enable logging
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
-logger = logging.getLogger(__name__)
+from bot_logging import logger, scheduler
 
 user_timezone = ''
 
@@ -49,25 +42,18 @@ def timezone(bot, update, args):
 		update.message.reply_text('Set to %s.' % user_timezone)
 
 	except Exception as e:
-		logging.error(str(e))
+		logger.error(str(e))
 		user_timezone = '+00:00'
 		update.message.reply_text('Something went wrong. Try to enter it once more')
 
-# context = [chat_id, event]
-def SendNotif(bot, job):
-	"""Function to send the alarm message"""
-	SendNotif(bot, job.context[0], job.context[1])
-
+# job.context = [chat_id, event]
 def SendNotif(bot, chat_id, event):
 	msg = generate_msg(event)
 	bot.send_message(chat_id, text=msg, parse_mode=telegram.ParseMode.MARKDOWN)
 
 # chat data is needed to implement user settings
-def SendNext(bot, update, chat_data):
-	SendNext(bot, update, [1], chat_data)
-
-def SendNext(bot, update, args, chat_data):
-	count = args[0]
+def SendNext(bot, update, chat_data, args=[1]):
+	count = int(args[0])
 	events = get_next_events(count)
 	for event in events:
 		SendNotif(bot, update.message.chat_id, event)
@@ -103,12 +89,17 @@ def create_event(launch):
 		#"rocket": launch['rocket']['name']
 		'location': launch['location']['pads'][0]['name'] 
 	}
+
+	scheduler.add_job(remove_cached_by_id, trigger='date', 
+				run_date=event['when'].shift(minutes=1).datetime,
+				args=[event['id']], id=event['id'])
+
 	return event
 
 # returns raw launches!! Its not the same as events
 def pick_info(start=0, end=k_cache_size):
-	logging.info("Picking...")
-	r = requests.get(create_link(mode='verbose', next=str(to)))
+	logger.info("Picking...")
+	r = requests.get(create_link(mode='verbose', next=str(end)))
 
 	if r.status_code == 200:
 		return (r.json()['launches'])[start : end]
@@ -118,23 +109,20 @@ def pick_info(start=0, end=k_cache_size):
 
 
 def update():
-	logging.info("Updating launches")
+	logger.info("Updating launches")
 	
 	launches = pick_info()
 
-	# clean cached ids which are no longer present
-	_first = 0
-	while launches[0]['id'] != cached_ids[_first]:
-		_first += 1
-	if _first != 0:
-		cached_ids[_first:]
-
+	_ids = []
 	for launch in launches:
 		event = create_event(launch)
-		if int(event['id']) in cache_dct:
+		_ids.append(event['id'])
+		if event['id'] in cached:
 			check_up_to_date(event)
-		else: 
+		else:
 			cache(event)
+	
+	update_sequence(_ids)
 
 
 def start(bot, update):
@@ -145,12 +133,11 @@ def start(bot, update):
 
 def help(bot, update):
 	update.message.reply_text(help_message)
-
-
 	
 def main():
-	# todo bot_cache update pos func!
-	# todo clean cached ids as soon as start occured
+	# todo get timezone from 
+	# 				https://maps.googleapis.com/maps/api/timezone/json?location=38.908133,-77.047119&timestamp=1458000000
+	# todo discuss line 94 ```run_date=event['when'].shift(minutes=1),```
 	# todo show notif of the ongoing launch mission if one is happening while your first chat 
 	# todo probability coefs
 	# todo if no vid, send pic 
@@ -177,25 +164,24 @@ def main():
 	dp.add_handler(CommandHandler("start", start))
 	dp.add_handler(CommandHandler("help", start))
 	dp.add_handler(CommandHandler("update", update,
-								  pass_job_queue=True,
-								  pass_chat_data=True))
+								pass_job_queue=True,
+								pass_chat_data=True))
 	#dp.add_handler(CommandHandler("unset", unset, pass_chat_data=True))
 	
 	dp.add_handler(CommandHandler("set_timezone", timezone, pass_args=True))
-	dp.add_handler(CommandHandler("set_alarm", set_alarm, pass_args=True, pass_chat_data=True))
-	dp.add_handler(CommandHandler('next', SendNext, pass_args=True, pass_chat_data=True))
-	dp.add_handler(CommandHandler('next', SendNext, pass_chat_data=True))
+#	dp.add_handler(CommandHandler("set_alarm", set_alarm, pass_args=True, pass_chat_data=True))
+	dp.add_handler(CommandHandler('next', SendNext, 
+								pass_args=True, 
+								pass_chat_data=True))
 	
-	
-	dp.add_handler()
+	#dp.add_handler()
 	#dp.add_handler(CommandHandler('subscribe', subscribe, pass_chat_data=True))
 
 	# log all errors
 	dp.add_error_handler(error)
 
 	# to archive updating without user, we should use schedule module
-	scheduler = BackgroundScheduler()
-	update()
+	# update()
 	scheduler.add_job(update, 'interval', hours=5)
 	scheduler.start()
 
