@@ -8,8 +8,9 @@ and
 https://github.com/elamperti/spacebot/blob/master/spacebot.py
 """
 
-from emoji import emojize
 import arrow
+from emoji import emojize
+
 
 # key 'msg' contains cached msg
 def generate_msg(props):
