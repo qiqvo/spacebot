@@ -19,6 +19,7 @@ from telegram.ext import CommandHandler, Job, Updater
 from bot_cache import *
 from bot_interface import *
 from bot_logging import logger, scheduler
+from bot_usersettings import Users
 
 user_timezone = ''
 
@@ -135,20 +136,22 @@ def help(bot, update):
 	update.message.reply_text(help_message)
 	
 def main():
-	# todo get timezone from 
+	# TODO get timezone from 
 	# 				https://maps.googleapis.com/maps/api/timezone/json?location=38.908133,-77.047119&timestamp=1458000000
-	# todo discuss line 94 ```run_date=event['when'].shift(minutes=1),```
-	# todo show notif of the ongoing launch mission if one is happening while your first chat 
-	# todo probability coefs
-	# todo if no vid, send pic 
-	# todo user settings: if to send msgs without videos
+	# TODO make cache a class
+	# TODO discuss line 94 ```run_date=event['when'].shift(minutes=1),```
+	# TODO show notif of the ongoing launch mission if one is happening while your first chat 
+	# TODO probability coefs
+	# TODO if no vid, send pic 
+	# TODO add user setting chat with 15 min update and 'only last change matters'
+	# TODO user settings: if to send msgs without videos
 	# 					  if to send uncertain launches
 	# 					  if to send pictures in what resolution is preferable
-	# todo make subscriber list and 
+	# TODO make subscriber list and 
 	#      send them all the notification in 30 mins
-	# todo make available more info about the launch 
+	# TODO make available more info about the launch 
 	#	   maybe send launch id and make a func '/more_info id 1234'
-	# todo make a full python lib for the source site ;;launchlibrary;;
+	# TODO make a full python lib for the source site ;;launchlibrary;;
 
 	token = ''
 	if os.path.isfile('_token.token'):
