@@ -14,7 +14,7 @@ import os
 import arrow
 
 from bot_interface import *
-from bot_logging import logger, scheduler, scheduler_datetime
+from bot_logging import logger, scheduler
 
 k_cache_size = 100
 cached = dict()
@@ -48,13 +48,14 @@ def check_up_to_date(event):
 	_hash = hashlib.sha1(str(event).encode()).hexdigest()
 
 	if c_event_hash != _hash:
-		if event['when'] != cached[event['id']]['when']:
+		if event['when'].timestamp != cached[event['id']]['when']:
 			scheduler.modify_job(event['id'], 
-				{'next_run_time':scheduler_datetime(event['when'].shift(minutes=1))})
-		cache(event)
+				{ 'next_run_time': event['when'].shift(minutes=1) })
+		cache(event, fingerprint=_hash)
 	
-def cache(event, update_flag=False):
-	fingerprint = hashlib.sha1(str(event).encode()).hexdigest()
+def cache(event, fingerprint=''):
+	if not fingerprint:
+		fingerprint = hashlib.sha1(str(event).encode()).hexdigest()
 	when = event['when'].timestamp
 	cached[event['id']] = {'fingerprint': fingerprint, 'when':when, 'msg':generate_msg(event)}
 
@@ -76,4 +77,4 @@ def remove_cached_by_id(id):
 		del ids_seq[0]
 	else:
 		logger.error('ID mismatch. ids_seq[0] is not the same as the el to be removed.')
-		logger.error('id %s is ' % id, 'not ' if id not in ids_seq else '', 'present in ids_seq')
+		logger.error('id %s is ' % id, 'NOT ' if id not in ids_seq else '', 'present in ids_seq')
