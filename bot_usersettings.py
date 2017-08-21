@@ -8,7 +8,6 @@ and
 https://github.com/elamperti/spacebot/blob/master/spacebot.py
 """
 
-
 """
 implement folloing TODO instr
 	# TODO user settings: if to send msgs without videos
@@ -73,10 +72,14 @@ class Users:
 	def remove_user(self, user_id):
 		self._update_users(removed=[user_id])
 		self._update_file(removed=[user_id])
-
+# TODO make smarter modify func:
+#		if pref does not contain earlier set up pref
+#		it should not be expelled!
 	def modify_user(self, user_id, pref):
+		"""Only modified data should be send in pref"""
 		self._update_users(modify_upref={user_id:pref})
 		self._update_file(modify_upref={user_id:pref})
+
 
 	def _update_users(self, *removed, **modify_upref):
 		"""
@@ -89,8 +92,9 @@ class Users:
 				self.users.remove(user)
 				pass
 			if user['id'] in modify_upref:
+				u_pref = Preferences(kwargs={'prefcode':modify_upref[user['id']]})
+				_add.append({'id': user['id'], 'pref': u_pref})
 				self.users.remove(user)
-				_add.append({'id': user['id'], 'pref': modify_upref[user['id']]})
 		
 		# mutex like structure: 
 		for change in _add:
@@ -118,3 +122,5 @@ class Users:
 
 		# clear tmp file
 		open(self.tmp_users_filename, 'w').close()
+
+users = Users()
