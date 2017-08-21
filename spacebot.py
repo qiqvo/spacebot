@@ -7,31 +7,17 @@ https://github.com/python-telegram-bot/python-telegram-bot/blob/master/examples/
 and 
 https://github.com/elamperti/spacebot/blob/master/spacebot.py
 """
-
-import datetime
 import os
 
-import arrow
-import requests
 import telegram
 from telegram.ext import CommandHandler, Job, Updater
 
-from bot_cache import *
+from bot_info import get_next_events, update
 from bot_interface import *
 from bot_logging import logger, scheduler
-from bot_usersettings import Users
+from bot_usersettings import users
 
-user_timezone = ''
-
-# in chat_data dict
-_user_alarm_minutes_before = 'user_alarm_minutes_before'
-_subscriber_5_min_before_the_launch = 's_5mb'
-
-
-subscribers_filename = 'subscribers_5mb.lst' # list of "5 minutes before the launch"-subscribers
-subscribers = []
-
-def timezone(bot, update, args):
+def timezone(bot, update, args, chat_data):
 	try:
 		update.message.reply_text()		
 		if not args[0]:
@@ -47,6 +33,16 @@ def timezone(bot, update, args):
 		user_timezone = '+00:00'
 		update.message.reply_text('Something went wrong. Try to enter it once more')
 
+def subscribe(bot, update, chat_data):
+	users.add_user(update.message.chat_id, 
+				pref={'send_uncertain_launches': True})
+
+def send_uncertain_launches(bot, update, args, chat_data):
+	if args[0] == 'yes':
+		chat_data['send_uncertain_launches'] = True
+	users.modify_user(update.message.chat_id, 
+			pref={'send_uncertain_launches':True})
+
 # job.context = [chat_id, event]
 def SendNotif(bot, chat_id, event):
 	msg = generate_msg(event)
@@ -61,70 +57,6 @@ def SendNext(bot, update, chat_data, args=[1]):
 	
 def error(bot, update, error):
 	logger.warning('Update "%s" caused error "%s"' % (update, error))
-
-# Modes are list, summary, verbose
-def create_link(mode, next):
-	source = 'https://launchlibrary.net/1.2/launch?'
-	return source + 'mode=' + mode + '&' + 'next=' + next
-
-def get_next_events(count):
-	events = get_cached_events(count) if count < k_cache_size else get_cached_events(k_cache_size)
-	if count > k_cache_size:
-		launches = pick_info(start=k_cache_size, end=(count+1))
-		for launch in launches:
-			events.append(create_event(launch))
-		
-	return events
-
-def create_event(launch):
-	event = {
-		'id' : launch['id'],
-		"when": arrow.get(launch['isonet'], "YYYYMMDDTHHmmss?"),
-		"name": launch['name'],
-		"probability": launch['probability'], # -1 for unknown
-		"urls": launch['vidURLs'],
-		#"pic": launch['rocket']['imageURL'],
-		#"pic_sizes": launch['rocket']['imageSizes'],
-		"missions_count": len(launch['missions']),
-		"description": launch['missions'][0]['description'],
-		#"rocket": launch['rocket']['name']
-		'location': launch['location']['pads'][0]['name'] 
-	}
-
-	scheduler.add_job(remove_cached_by_id, trigger='date', 
-				run_date=event['when'].shift(minutes=1).datetime,
-				args=[event['id']], id=event['id'])
-
-	return event
-
-# returns raw launches!! Its not the same as events
-def pick_info(start=0, end=k_cache_size):
-	logger.info("Picking...")
-	r = requests.get(create_link(mode='verbose', next=str(end)))
-
-	if r.status_code == 200:
-		return (r.json()['launches'])[start : end]
-	else:
-		logger.error('Error: bad request, while picking')
-		return []
-
-
-def update():
-	logger.info("Updating launches")
-	
-	launches = pick_info()
-
-	_ids = []
-	for launch in launches:
-		event = create_event(launch)
-		_ids.append(event['id'])
-		if event['id'] in cached:
-			check_up_to_date(event)
-		else:
-			cache(event)
-	
-	update_sequence(_ids)
-
 
 def start(bot, update):
 	update.message.reply_text(welcome_message)
@@ -178,7 +110,9 @@ def main():
 								pass_chat_data=True))
 	
 	#dp.add_handler()
-	#dp.add_handler(CommandHandler('subscribe', subscribe, pass_chat_data=True))
+	dp.add_handler(CommandHandler('subscribe', subscribe, pass_chat_data=True))
+	dp.add_handler(CommandHandler('send_uncertain_launches', send_uncertain_launches, 
+								pass_chat_data=True, pass_args=True))
 
 	# log all errors
 	dp.add_error_handler(error)
