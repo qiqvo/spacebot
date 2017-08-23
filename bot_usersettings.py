@@ -72,7 +72,6 @@ class Users:
 	"""
 	users = dict()
 	users_filename = 'users.lst'
-	tmp_users_filename = 'tmp_users.lst'
 
 	def add_user(self, user_id, **pref):
 		u_pref = Preferences(kwargs=pref)
