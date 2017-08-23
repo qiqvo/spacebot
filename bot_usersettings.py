@@ -19,43 +19,58 @@ user_preferences should be saved in a file
 
 pref code  is a num which should be seen as bits
 
-```users``` is a list of dicts
-			user is [{'id':###, 'pref': Preferences}, ...]
+	```users``` is a dict
+			users is {'id': Preferences, ...}
 """
 
 class Preferences:
-	def __init__(self, **kwargs
-		#send_uncertain_launches
-		#,...
-	):
+	"dict of  {'what':val, ...}"
+	prefs = dict()
+	pref_names = ['send_uncertain_launches']
+	# code = int 
+
+	def __init__(self, **kwargs):
 		if 'prefcode' in kwargs:
 			self._init_with_prefcode(kwargs['prefcode'])
+			self.code = kwargs['prefcode']
 		else:
-			# TODO check if the order is right!!
-			self._init_with_args([val for key, val in kwargs])
-			self.code = self.generate_code() 
+			for name in kwargs:
+				set(what=name, val=kwargs[name])
+			
+			if not self.code:
+				self.code = self.generate_code() 
 	
-	def _init_with_args(self, *args):
-		self.send_uncertain_launches = args[0]
-		# ... 
-		
 	def _init_with_prefcode(self, prefcode):
+		"""
+		prefcode is str
+		function generates a kwargs for __init__ 
+		"""
 		bin_code = "{0:b}".format(prefcode)
-		args = [bool(c) for c in bin_code[::-1]]
-		self._init_with_args(args)
-		self.code = int(prefcode)
+		kwargs = dict()
+		i = 0
+		for name in self.pref_names:
+			kwargs[name] = bool(bin_code[::-1][i])
+			i += 1
+
+		self.__init__(kwargs=kwargs)
 
 	def generate_code(self):
 		"""returns int"""
-		bin_code = '1' if self.send_uncertain_launches else '0'
+		bin_code = ''
+		for name in self.pref_names:
+			bin_code += '1' if self.prefs[name] else '0'
+			
 		return int(bin_code, 2)
+
+	def set(self, what, val):
+		self.prefs[what] = val
 
 class Users:
 	"""
-	```users``` is a list of dicts
-			users is [{'id':###, 'pref': Preferences}, ...]
+	```users``` is a dict
+			users is {'id': Preferences, ...}
 	"""
-	users = set()
+	users = dict()
 	users_filename = 'users.lst'
 	tmp_users_filename = 'tmp_users.lst'
 
@@ -64,63 +79,57 @@ class Users:
 		with open(self.users_filename, 'a') as uf:
 			uf.print(user_id, u_pref.code)
 
-		self.users.add({'id':user_id, 'pref':u_pref })
-
-# TODO union modify and remove funcs 
-# 		send not only one id, but a list
-#		EXP: users should update every 15 min
-	def remove_user(self, user_id):
-		self._update_users(removed=[user_id])
-		self._update_file(removed=[user_id])
-# TODO make smarter modify func:
-#		if pref does not contain earlier set up pref
-#		it should not be expelled!
-	def modify_user(self, user_id, pref):
-		"""Only modified data should be send in pref"""
-		self._update_users(modify_upref={user_id:pref})
-		self._update_file(modify_upref={user_id:pref})
+		self.users[user_id] = u_pref
 
 
-	def _update_users(self, *removed, **modify_upref):
+	"_to_remove is a set of str  'user_id'"
+	_to_remove = set()
+	"_to_modify is a dict   {'user_id': {'what': val, ...}, ...}"
+	_to_modify = dict()
+
+	def change(self, remove='', undo_remove='', modify=[]):
 		"""
-		removed == list of ids
-		modify_upref == dict {'id':code, ...}
+		undo_remove and remove is 'user_id'
+		modify is ['user_id', ['what', val]]
 		"""
-		_add = []
+		if remove:
+			self._to_remove.add(remove)
+		if undo_remove:
+			self._to_remove.remove(undo_remove)
+		if modify:
+			user_id = modify[0]
+			if user_id in self._to_modify:
+				what = modify[1][0]
+				val  = modify[1][1]
+				self._to_modify[user_id][what] = val
+			self._to_modify[modify[0]] = modify[1]
+
+	def _change(self):
+		self._change_list()
+		self._change_file()
+
+	def _change_list(self):
 		for user in self.users:
-			if user['id'] in removed:
-				self.users.remove(user)
+			user_id = user['id']
+			if user_id in self._to_remove:
+				del self.users[user_id]
 				pass
-			if user['id'] in modify_upref:
-				u_pref = Preferences(kwargs={'prefcode':modify_upref[user['id']]})
-				_add.append({'id': user['id'], 'pref': u_pref})
-				self.users.remove(user)
-		
-		# mutex like structure: 
-		for change in _add:
-			self.users.add(change)
-				
+			if user_id in self._to_modify:
+				u_pref = self.users[user_id]
+				new_u_pref = self._to_modify[user_id]
 
-	def _update_file(self, *removed, **modify_upref):
-		"""
-		removed == list of ids
-		modify_upref == dict {'id':code, ...}
-		"""
-		with open(self.users_filename, 'r') as uf, open(self.tmp_users_filename, 'w') as tuf:
+				for key, val in new_u_pref:
+					self.users[user_id].set(what=key, val=val)
+
+	def _change_file(self):
+		with open(self.users_filename, 'w') as uf:
+			for user_id, u_pref in self.users:
+				print(user_id, u_pref.code, file=uf)
+
+	def get_from_file(self):
+		with open(self.users_filename, 'r') as uf:
 			for line in uf:
-				user_id, code = line.split()
-				if user_id in removed:
-					pass
-
-				print(user_id, modify_upref[user_id] if user_id in modify_upref else code, file=tuf)
-
-		# TODO rename files
-		# copy from tmp to working
-		with open(self.tmp_users_filename, 'r') as tuf, open(self.users_filename, 'w') as uf:
-			for line in tuf:
-				print(line, file=uf)
-
-		# clear tmp file
-		open(self.tmp_users_filename, 'w').close()
+				user_id, pref_code = line.split()
+				users.add_user(user_id=user_id, pref={'prefcode':pref_code})
 
 users = Users()
