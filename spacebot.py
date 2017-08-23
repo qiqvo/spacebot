@@ -118,9 +118,11 @@ def main():
 	# log all errors
 	dp.add_error_handler(error)
 
-	# to archive updating without user, we should use schedule module
-	# update()
 	scheduler.add_job(update, 'interval', hours=5)
+	
+	users.get_from_file()
+	scheduler.add_job(users._change, 'interval', minutes=15)
+	
 	scheduler.start()
 
 	# Start the Bot
