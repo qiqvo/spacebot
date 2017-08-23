@@ -40,8 +40,9 @@ def subscribe(bot, update, chat_data):
 def send_uncertain_launches(bot, update, args, chat_data):
 	if args[0] == 'yes':
 		chat_data['send_uncertain_launches'] = True
-	users.modify_user(update.message.chat_id, 
-			pref={'send_uncertain_launches':True})
+
+	user_id = update.message.chat_id
+	users.change(modify=[user_id, ['send_uncertain_launches', True]])
 
 # job.context = [chat_id, event]
 def SendNotif(bot, chat_id, event):
@@ -68,11 +69,11 @@ def help(bot, update):
 	update.message.reply_text(help_message)
 	
 def main():
+	# TODO create event class with event remover (scheduler) 
 	# TODO get timezone from 
 	# 				https://maps.googleapis.com/maps/api/timezone/json?location=38.908133,-77.047119&timestamp=1458000000
-	# TODO make cache a class
 	# TODO discuss line 94 ```run_date=event['when'].shift(minutes=1),```
-	# TODO show notif of the ongoing launch mission if one is happening while your first chat 
+	# TODO show notif of the ongoing launch mission if one is happening while your chat 
 	# TODO probability coefs
 	# TODO if no vid, send pic 
 	# TODO add user setting chat with 15 min update and 'only last change matters'
@@ -104,7 +105,7 @@ def main():
 	#dp.add_handler(CommandHandler("unset", unset, pass_chat_data=True))
 	
 	dp.add_handler(CommandHandler("set_timezone", timezone, pass_args=True))
-#	dp.add_handler(CommandHandler("set_alarm", set_alarm, pass_args=True, pass_chat_data=True))
+	#dp.add_handler(CommandHandler("set_alarm", set_alarm, pass_args=True, pass_chat_data=True))
 	dp.add_handler(CommandHandler('next', SendNext, 
 								pass_args=True, 
 								pass_chat_data=True))
