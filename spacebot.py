@@ -10,7 +10,8 @@ https://github.com/elamperti/spacebot/blob/master/spacebot.py
 import os
 
 import telegram
-from telegram.ext import CommandHandler, Job, Updater
+from telegram.ext import (CommandHandler, Job, Updater, MessageHandler, 
+						Filters, RegexHandler, ConversationHandler)
 
 from bot_info import get_next_events, update
 from bot_interface import *
@@ -104,7 +105,9 @@ def main():
 								pass_chat_data=True))
 	#dp.add_handler(CommandHandler("unset", unset, pass_chat_data=True))
 	
-	dp.add_handler(CommandHandler("set_timezone", timezone, pass_args=True))
+	#dp.add_handler(CommandHandler("set_timezone", timezone, pass_args=True))
+	#dp.add_handler(MessageHandler(Filters.location, location))
+	
 	#dp.add_handler(CommandHandler("set_alarm", set_alarm, pass_args=True, pass_chat_data=True))
 	dp.add_handler(CommandHandler('next', SendNext, 
 								pass_args=True, 
