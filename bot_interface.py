@@ -45,6 +45,7 @@ class Interface:
 				'/set_alarm 5  			-- to set alarm on 5 minutes before the launch\n' \
 				'/send_uncertain_launches yes -- to send ...'
 
-# TODO write subscibe answer msg 
+	# TODO write subscibe answer msg 
+	subscribe_message = 'bla-bla-bla'
 
 interface = Interface()
