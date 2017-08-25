@@ -1,5 +1,4 @@
-.token
-subscriber.lst
 _token.token
-./cache/*
-cache.sign
+/__pycache__
+users.lst
+launch.json
