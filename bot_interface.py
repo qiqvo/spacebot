@@ -35,8 +35,8 @@ class Interface:
 
 		return message
 
-	welcome_message = 'Hi! Nice to have you on board.'  \
-						'We are to take off the planet at...'  \
+	welcome_message = 'Hi! Nice to have you on board. '  \
+						'We are to take off the planet at... '  \
 						"It's hard to tell not knowing your timezone."
 	help_message =  'usage: \n' \
 				'/set_timezone +00:00 	-- to set the timezone UTC\n' \

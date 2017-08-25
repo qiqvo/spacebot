@@ -10,22 +10,21 @@ https://github.com/elamperti/spacebot/blob/master/spacebot.py
 
 import telegram
 
-from bot_base import base
 from bot_cache import cache
 from bot_interface import interface
 from bot_logging import logger, scheduler
 from bot_usersettings import users, Preferences
 
-
 class Sender:
-"""
-firstly set up the bot!!
-"""
+	"""
+	firstly set up the bot!!
+	"""
 	def set_bot(self, bot):
 		self.bot = bot
 
 	def SendAll(self, event_id):
-		for user_id, user_pref in users.users:
+		from bot_base import base
+		for user_id, user_pref in users.users.items():
 			event = base.get_event(event_id)
 			msg = interface.generate_msg(event, user_pref.prefs)
 			if msg:
@@ -38,6 +37,7 @@ firstly set up the bot!!
 				parse_mode=telegram.ParseMode.MARKDOWN)
 			
 	def SendNext(self, user_id, count):
+		from bot_base import base
 		events = base.get_next_events(count)
 		for event in events:
 			msg = interface.generate_msg(event, users.users[user_id].prefs)

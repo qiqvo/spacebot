@@ -23,12 +23,12 @@ def create_link(mode, next):
 	return source + 'mode=' + mode + '&' + 'next=' + next
 
 # returns raw launches!
-def pick_info(start=0, end=cache.k_cache_size):
+def pick_info(count):
 	logger.info("Picking launches...")
-	r = requests.get(create_link(mode='verbose', next=str(end)))
+	r = requests.get(create_link(mode='verbose', next=str(count)))
 
 	if r.status_code == 200:
-		return (r.json()['launches'])[start : end]
+		return (r.json()['launches'])
 	else:
 		logger.error('Error: bad request, while picking')
 		return []
@@ -55,13 +55,13 @@ class Base:
 	a table which is sorted by 'time'
 	id#time# other event props:...name#...
 	"""
-	k_table_size = 100  
+	k_table_size = 10
 	table = [None] * k_table_size
 	jobs = []
 
 	def update(self):
 		logger.info("Updating launches")
-		launches = pick_info()
+		launches = pick_info(self.k_table_size)
 		
 		# TODO dont reset the whole table -- just update the content and sort by date
 		logger.info('\tresetting table of events')
@@ -84,8 +84,7 @@ class Base:
 				trigger='date', run_date=event['when'].shift(minutes=-5).datetime,
 				args=[event['id']])
 			job_remove = scheduler.add_job(self.remove_first, 
-				trigger='date', run_date=event['when'].shift(minutes=1).datetime,
-				args=[event['id']])
+				trigger='date', run_date=event['when'].shift(minutes=1).datetime)
 
 			self.jobs.append({
 				'id': event['id'], 

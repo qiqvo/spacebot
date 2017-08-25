@@ -29,16 +29,15 @@ class Preferences:
 	pref_names = ['send_uncertain_launches']
 	# code = int 
 
-	def __init__(self, **kwargs):
+	def __init__(self, kwargs):
 		if 'prefcode' in kwargs:
 			self._init_with_prefcode(kwargs['prefcode'])
 			self.code = kwargs['prefcode']
 		else:
-			for name in kwargs:
-				set(what=name, val=kwargs[name])
+			for name, val in kwargs.items():
+				self.set(what=name, val=val)
 			
-			if not self.code:
-				self.code = self.generate_code() 
+			self.code = self.generate_code() 
 	
 	def _init_with_prefcode(self, prefcode):
 		"""
@@ -73,10 +72,10 @@ class Users:
 	users = dict()
 	users_filename = 'users.lst'
 
-	def add_user(self, user_id, **pref):
+	def add_user(self, user_id, pref):
 		u_pref = Preferences(kwargs=pref)
 		with open(self.users_filename, 'a') as uf:
-			uf.print(user_id, u_pref.code)
+			print(user_id, u_pref.code, file=uf)
 
 		self.users[user_id] = u_pref
 
@@ -117,12 +116,12 @@ class Users:
 				u_pref = self.users[user_id]
 				new_u_pref = self._to_modify[user_id]
 
-				for key, val in new_u_pref:
+				for key, val in new_u_pref.items():
 					self.users[user_id].set(what=key, val=val)
 
 	def _change_file(self):
 		with open(self.users_filename, 'w') as uf:
-			for user_id, u_pref in self.users:
+			for user_id, u_pref in self.users.items():
 				print(user_id, u_pref.code, file=uf)
 
 	def get_from_file(self):
