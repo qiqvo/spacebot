@@ -24,27 +24,29 @@ def subscribe(bot, update, chat_data):
 	user_id = update.message.chat_id
 	logger.info('Subscribe user %s' % user_id)
 	update.message.reply_text(interface.subscribe_message)
-	users.add_user(user_id, 
-				pref={'send_uncertain_launches': True})
+	# TODO add user setting to send in time 
 
 def send_uncertain_launches(bot, update, args, chat_data):
 	user_id = update.message.chat_id
 	users.change(modify=[user_id, ['send_uncertain_launches', True]])
 
 def SendNext(bot, update, args):
-	count = args[0]
+	count = int(args[0])
 	user_id = update.message.chat_id
-	logger.info("Sending user %s next %d events" % user_id, count)
+	logger.info("Sending user %s next %d events" % (user_id, count))
 	sender.SendNext(user_id, count)
 
 def error(bot, update, error):
 	logger.warning('Update "%s" caused error "%s"' % (update, error))
 
 def start(bot, update):
-	logger('Starting with user %s' % update.message.chat_id)
+	user_id = update.message.chat_id
+	logger.info('Starting with user %s' % user_id)
 	update.message.reply_text(interface.welcome_message)
 	user = update.message.from_user
 	logger.info('new user %s' % user.first_name)
+	users.add_user(user_id, 
+			pref={'send_uncertain_launches': True})
 	help(bot, update)
 
 def help(bot, update):
@@ -85,6 +87,7 @@ def main():
 	# log all errors
 	dp.add_error_handler(error)
 
+	base.update()
 	scheduler.add_job(base.update, 'interval', hours=5)
 	
 	users.get_from_file()
