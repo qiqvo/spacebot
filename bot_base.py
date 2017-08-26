@@ -56,7 +56,7 @@ class Base:
 	id#time# other event props:...name#...
 	"""
 	k_table_size = 10
-	table = [None] * k_table_size
+	table = []
 	jobs = []
 
 	def update(self):
@@ -64,21 +64,24 @@ class Base:
 		launches = pick_info(self.k_table_size)
 		
 		# TODO dont reset the whole table -- just update the content and sort by date
-		logger.info('\tresetting table of events')
-		num = 0
+		logger.info('resetting table of events')
+		logger.info('Removing prev entries')
+		self.table.clear()
+		logger.info('Setting new events')
 		for launch in launches:
 			event = create_event(launch)
-			self.table[num] = event
-			num += 1
+			if event['when'] > arrow.now():
+				self.table.append(event)
 		
 		# TODO dont remove prev jobs, try to update the ones
-		logger.info('\tresetting jobs\n\t\tRemoving prev jobs')
+		logger.info('resetting jobs')
+		logger.info('Removing prev jobs')
 		for job in self.jobs:
 			job['job_start'].remove()
 			job['job_remove'].remove()
 		self.jobs.clear()
 
-		logger.info('\t\tSetting new jobs')
+		logger.info('Setting new jobs')
 		for event in self.table:
 			job_start = scheduler.add_job(sender.SendAll,
 				trigger='date', run_date=event['when'].shift(minutes=-5).datetime,
