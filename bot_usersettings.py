@@ -44,7 +44,7 @@ class Preferences:
 		prefcode is str
 		function generates a kwargs for __init__ 
 		"""
-		bin_code = "{0:b}".format(prefcode)
+		bin_code = "{0:b}".format(int(prefcode))
 		kwargs = dict()
 		i = 0
 		for name in self.pref_names:
@@ -72,10 +72,11 @@ class Users:
 	users = dict()
 	users_filename = 'users.lst'
 
-	def add_user(self, user_id, pref):
+	def add_user(self, user_id, pref, _write_to_file=True):
 		u_pref = Preferences(kwargs=pref)
-		with open(self.users_filename, 'a') as uf:
-			print(user_id, u_pref.code, file=uf)
+		if _write_to_file:
+			with open(self.users_filename, 'a') as uf:
+				print(user_id, u_pref.code, file=uf)
 
 		self.users[user_id] = u_pref
 
@@ -108,7 +109,7 @@ class Users:
 
 	def _change_list(self):
 		for user in self.users:
-			user_id = user['id']
+			user_id = user
 			if user_id in self._to_remove:
 				del self.users[user_id]
 				pass
@@ -128,6 +129,6 @@ class Users:
 		with open(self.users_filename, 'r') as uf:
 			for line in uf:
 				user_id, pref_code = line.split()
-				users.add_user(user_id=user_id, pref={'prefcode':pref_code})
+				users.add_user(user_id=user_id, pref={'prefcode':pref_code}, _write_to_file=False)
 
 users = Users()
