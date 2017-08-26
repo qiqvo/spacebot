@@ -31,7 +31,10 @@ def send_uncertain_launches(bot, update, args, chat_data):
 	users.change(modify=[user_id, ['send_uncertain_launches', True]])
 
 def SendNext(bot, update, args):
-	count = int(args[0])
+	count = 1
+	if args:
+		count = int(args[0])
+	
 	user_id = update.message.chat_id
 	logger.info("Sending user %s next %d events" % (user_id, count))
 	sender.SendNext(user_id, count)
@@ -76,7 +79,7 @@ def main():
 
 	# on different commands - answer in Telegram
 	dp.add_handler(CommandHandler("start", start))
-	dp.add_handler(CommandHandler("help", start))
+	dp.add_handler(CommandHandler("help", help))
 	dp.add_handler(CommandHandler('next', SendNext, 
 								pass_args=True))
 	
