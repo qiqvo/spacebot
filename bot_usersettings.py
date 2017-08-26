@@ -73,12 +73,17 @@ class Users:
 	users_filename = 'users.lst'
 
 	def add_user(self, user_id, pref, _write_to_file=True):
-		u_pref = Preferences(kwargs=pref)
-		if _write_to_file:
-			with open(self.users_filename, 'a') as uf:
-				print(user_id, u_pref.code, file=uf)
+		if user_id in self.users:
+			for what, val in pref.items():
+				self.change(modify=[user_id, [what, val]])
 
-		self.users[user_id] = u_pref
+		else:
+			u_pref = Preferences(kwargs=pref)
+			if _write_to_file:
+				with open(self.users_filename, 'a') as uf:
+					print(user_id, u_pref.code, file=uf)
+
+			self.users[user_id] = u_pref
 
 
 	"_to_remove is a set of str  'user_id'"
