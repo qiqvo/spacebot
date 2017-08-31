@@ -26,8 +26,8 @@ pref code  is a num which should be seen as bits
 class Preferences:
 	"dict of  {'what':val, ...}"
 	prefs = dict()
-	pref_names = ['send_uncertain_launches']
-	# code = int 
+	pref_names = ['send_uncertain_launches', 'send_5_min_before_launch_alert']
+	# code = int
 
 	def __init__(self, kwargs):
 		if 'prefcode' in kwargs:
@@ -72,7 +72,11 @@ class Users:
 	users = dict()
 	users_filename = 'users.lst'
 
-	def add_user(self, user_id, pref, _write_to_file=True):
+	def add_user(self, user_id, pref=None, _write_to_file=True):
+		if not pref:
+			pref = dict(send_uncertain_launches=True,
+				send_5_min_before_launch_alert=False)
+
 		if user_id in self.users:
 			for what, val in pref.items():
 				self.change(modify=[user_id, [what, val]])

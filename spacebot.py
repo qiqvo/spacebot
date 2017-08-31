@@ -7,6 +7,7 @@ https://github.com/python-telegram-bot/python-telegram-bot/blob/master/examples/
 and 
 https://github.com/elamperti/spacebot/blob/master/spacebot.py
 """
+
 import os
 
 import telegram
@@ -20,11 +21,18 @@ from bot_usersettings import users
 from bot_sender import sender
 
 
-def subscribe(bot, update, chat_data):
+def subscribe(bot, update):
 	user_id = update.message.chat_id
 	logger.info('Subscribe user %s' % user_id)
+	users.change(modify=[user_id, ['send_5_min_before_launch_alert', True]])
 	update.message.reply_text(interface.subscribe_message)
-	# TODO add user setting to send in time 
+	# TODO add user setting to send in time
+
+def unsubscribe(bot, update):
+	user_id = update.message.chat_id
+	logger.info('Unsubscribe user %s' % user_id)
+	users.change(modify=[user_id, ['send_5_min_before_launch_alert', False]])
+	update.message.reply_text(interface.unsubscribe_message)
 
 def send_uncertain_launches(bot, update, args, chat_data):
 	user_id = update.message.chat_id
@@ -34,7 +42,7 @@ def SendNext(bot, update, args):
 	count = 1
 	if args:
 		count = int(args[0])
-	
+
 	user_id = update.message.chat_id
 	logger.info("Sending user %s next %d events" % (user_id, count))
 	sender.SendNext(user_id, count)
@@ -48,8 +56,7 @@ def start(bot, update):
 	update.message.reply_text(interface.welcome_message)
 	user = update.message.from_user
 	logger.info('new user %s' % user.first_name)
-	users.add_user(user_id, 
-			pref={'send_uncertain_launches': True})
+	users.add_user(user_id)
 	help(bot, update)
 
 def help(bot, update):
@@ -82,11 +89,13 @@ def main():
 	dp.add_handler(CommandHandler("help", help))
 	dp.add_handler(CommandHandler('next', SendNext, 
 								pass_args=True))
-	
-	dp.add_handler(CommandHandler('subscribe', subscribe, pass_chat_data=True))
-	dp.add_handler(CommandHandler('send_uncertain_launches', send_uncertain_launches, 
-								pass_chat_data=True, pass_args=True))
 
+	dp.add_handler(CommandHandler('subscribe', subscribe))
+	dp.add_handler(CommandHandler('unsubscribe', unsubscribe))
+	dp.add_handler(CommandHandler('send_uncertain_launches', send_uncertain_launches,
+								pass_chat_data=True, pass_args=True))
+	# dp.add_handler(CommandHandler('send_non_video_launches', send_non_video_launches,
+	# 							pass_chat_data=True, pass_args=True))
 	# log all errors
 	dp.add_error_handler(error)
 

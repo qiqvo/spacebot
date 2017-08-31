@@ -25,10 +25,11 @@ class Sender:
 	def SendAll(self, event_id):
 		from bot_base import base
 		for user_id, user_pref in users.users.items():
-			event = base.get_event(event_id)
-			msg = interface.generate_msg(event, user_pref.prefs)
-			if msg:
-				self.Send(user_id, msg)
+			if user_pref.prefs['send_5_min_before_launch_alert']:
+				event = base.get_event(event_id)
+				msg = interface.generate_msg(event, alert=True, user_pref=user_pref.prefs)
+				if msg:
+					self.Send(user_id, msg)
 
 
 	# TODO check if telegram.ParseMode.MARKDOWN works correctly
