@@ -106,11 +106,12 @@ class Users:
 			self._to_remove.remove(undo_remove)
 		if modify:
 			user_id = modify[0]
+			what = modify[1][0]
+			val  = modify[1][1]
 			if user_id in self._to_modify:
-				what = modify[1][0]
-				val  = modify[1][1]
 				self._to_modify[user_id][what] = val
-			self._to_modify[modify[0]] = modify[1]
+			else:
+				self._to_modify[user_id] = dict(what=val)
 
 	def _change(self):
 		self._change_list()
