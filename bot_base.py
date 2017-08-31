@@ -34,6 +34,17 @@ def pick_info(count):
 		return []
 
 def create_event(launch):
+	"""
+	event
+		id is num
+		when is arrow time (T-0 time)
+		name is str   (name of launch)
+		probability is num (-1 for unknown)
+		urls is a list
+		missions is a list (in each may be present ['description'])
+		pads is a list
+		location is a str (country name)
+	"""
 	event = {
 		'id' : launch['id'],
 		"when": arrow.get(launch['isonet'], "YYYYMMDDTHHmmss?"),
@@ -42,10 +53,10 @@ def create_event(launch):
 		"urls": launch['vidURLs'],
 		#"pic": launch['rocket']['imageURL'],
 		#"pic_sizes": launch['rocket']['imageSizes'],
-		"missions_count": len(launch['missions']),
-		"description": launch['missions'][0]['description'],
+		"missions": launch['missions'],
 		#"rocket": launch['rocket']['name']
-		'location': launch['location']['pads'][0]['name'] 
+		'pads': launch['location']['pads'],
+		'location' : launch['location']['name']
 	}
 
 	return event
