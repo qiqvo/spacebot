@@ -12,20 +12,41 @@ import arrow
 from emoji import emojize
 
 class Interface:
-	# key 'msg' contains cached msg
 	@staticmethod
-	def generate_msg(props, user_pref=None):
-		if 'msg' in props:
-			return props['msg']
+	def generate_descroption(missions):
+		descr = ''
+		for mission in missions:
+			descr += '_' + mission['typeName'] + '_    ' + mission['name'] + '\n' + mission['description'] + '\n'
 
+		return descr
+
+	@staticmethod
+	def generate_msg(props, alert=False, user_pref=None):
+		"""
+		event
+			id is num
+			when is arrow time (T-0 time)
+			name is str   (name of launch)
+			probability is num (-1 for unknown)
+			urls is a list
+			missions is a list (in each may be present ['description'])
+			pads is a list
+			location is a str (country name)
+		"""
 		message =  emojize(":rocket:", use_aliases=True)
-		message += ' **' + props['name'] + '**' + '\n'
-		message += 'A launch will happen ' + props['when'].humanize() + '!'
-		message += ' at ' + props['when'].format('HH:mm') + '\n'
-		message += 'Taking from **' + props['location'] + '**.\n'
-		message += '**Mission description**\n' + props['description'] + '.\n\n'
+		if alert:
+			message += ' *Launch is going to happen in some minutes!* '
+		message += ' *' + props['name'] + '*' + '\n'
 
-		if len(props['urls']) > 0:
+		if not alert:
+			message += 'A launch will happen _' + props['when'].humanize() + '_! '
+			message += 'I mean ' + props['when'].format('YYYY-MM-DD HH:mm:ss ZZ') + '\n'
+
+		message += 'Taking from *' + props['location'] + '*.\n'
+
+		message += '*Mission description*\n' + Interface.generate_descroption(props['missions']) + '\n\n'
+
+		if props['urls']:
 			message += 'Watch it here: \n'
 			for url in props['urls']:
 				message += '  • ' + url + '\n'
@@ -41,10 +62,16 @@ class Interface:
 	help_message =  'usage: \n' \
 				'/help                  -- to get this msg\n' \
 				'/next         			-- to get the following launch\n' \
-				'/next 4       			-- to get the following 4 launches\n' \
-				'/send_uncertain_launches yes -- to send ...'
+				'/next <num> 			-- to get the following 4 launches\n' \
+				'/send_uncertain_launches -- to send ...' \
+				'/subscribe             -- to get alerts 5 min before the launch' \
+				'/unsubscribe           -- to disable it' \
+				''
 
-	# TODO write subscibe answer msg 
-	subscribe_message = 'bla-bla-bla'
+	# TODO write subscibe answer msg
+	subscribe_message = 'bla-bla-bla' # you will be subscribed in 15 minutes at most! Thanks!
+	unsubscribe_message = 'bla-bla-bla' # you will be unsubscribed in 15 minutes at most!
+
+
 
 interface = Interface()

@@ -34,7 +34,7 @@ def unsubscribe(bot, update):
 	users.change(modify=[user_id, ['send_5_min_before_launch_alert', False]])
 	update.message.reply_text(interface.unsubscribe_message)
 
-def send_uncertain_launches(bot, update, args, chat_data):
+def send_uncertain_launches(bot, update):
 	user_id = update.message.chat_id
 	users.change(modify=[user_id, ['send_uncertain_launches', True]])
 
@@ -92,8 +92,7 @@ def main():
 
 	dp.add_handler(CommandHandler('subscribe', subscribe))
 	dp.add_handler(CommandHandler('unsubscribe', unsubscribe))
-	dp.add_handler(CommandHandler('send_uncertain_launches', send_uncertain_launches,
-								pass_chat_data=True, pass_args=True))
+	dp.add_handler(CommandHandler('send_uncertain_launches', send_uncertain_launches))
 	# dp.add_handler(CommandHandler('send_non_video_launches', send_non_video_launches,
 	# 							pass_chat_data=True, pass_args=True))
 	# log all errors
