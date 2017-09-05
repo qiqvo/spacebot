@@ -70,9 +70,11 @@ def main():
 	# TODO user settings: if to send msgs without videos
 	# 					  if to send uncertain launches
 	# 					  if to send pictures in what resolution is preferable
-	# TODO make available more info about the launch 
+	# TODO make available more info about the launch
 	#	   maybe send launch id and make a func '/more_info id 1234'
 	# TODO make a full python lib for the source site ;;launchlibrary;;
+
+	# TODO last week till now base of launches
 
 	token = ''
 	if os.path.isfile('_token.token'):

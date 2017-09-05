@@ -13,7 +13,7 @@ from emoji import emojize
 
 class Interface:
 	@staticmethod
-	def generate_descroption(missions):
+	def generate_description(missions):
 		descr = ''
 		for mission in missions:
 			descr += '_' + mission['typeName'] + '_    ' + mission['name'] + '\n' + mission['description'] + '\n'
@@ -44,7 +44,7 @@ class Interface:
 
 		message += 'Taking from *' + props['location'] + '*.\n'
 
-		message += '*Mission description*\n' + Interface.generate_descroption(props['missions']) + '\n\n'
+		message += '*Mission description*\n' + Interface.generate_description(props['missions']) + '\n\n'
 
 		if props['urls']:
 			message += 'Watch it here: \n'
