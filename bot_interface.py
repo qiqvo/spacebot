@@ -25,7 +25,7 @@ class Interface:
 	# TODO if no vid, send pic
 	
 	@staticmethod
-	def generate_msg(props, alert=False, user_pref=None):
+	def generate_msg(props, alert=False, user_pref=None, past=False):
 		"""
 		event
 			id is num
@@ -38,27 +38,39 @@ class Interface:
 			location is a str (country name)
 		"""
 		message =  emojize(":rocket:", use_aliases=True)
-		if alert:
-			message += ' *Launch is going to happen in some minutes!* '
+		if past:
+			message += ' Launch was held on: ' + props['when'].format('YYYY-MM-DD HH:mm:ss ZZ') + '.\n'
+		else:
+			if alert:
+				message += ' *Launch is going to happen in some minutes!* '
 		message += ' *' + props['name'] + '*' + '\n'
 
-		if not alert:
+		if not alert and not past:
 			message += 'A launch will happen _' + props['when'].humanize() + '_! '
 			message += 'I mean ' + props['when'].format('YYYY-MM-DD HH:mm:ss ZZ') + '\n'
 
-		message += 'Taking from *' + props['location'] + '*.\n'
+		if past:
+			message += 'Taken from *'
+		else:
+			message += 'Taking from *'
+
+		message += props['location'] + '*.\n'
 
 		message += '*Mission description*\n' + Interface.generate_description(props['missions']) + '\n\n'
 
+
 		if props['urls']:
-			message += 'Watch it here: \n'
+			message += 'Watch it here: \n' if not past else 'You could have watched it here: \n'
 			for url in props['urls']:
 				message += '  • ' + url + '\n'
 		else:
-			message += 'Unfortunately there are no reported webcasts ' \
+			message += 'Unfortunately there'
+			message += 'are' if not past else 'were'
+			message += 'no reported webcasts ' \
 					   + emojize(':disappointed_relieved:', use_aliases=True)
 
 		return message
+
 
 	welcome_message = 'Hi! Nice to have you on board. '  \
 						'We are to take off the planet at... '  \
@@ -70,6 +82,7 @@ class Interface:
 				'/send_uncertain_launches -- to send uncertain launches. Send once more to discard' \
 				'/subscribe             -- to get alerts 5 min before the launch' \
 				'/unsubscribe           -- to disable it' \
+				"/last_week				-- to send last week's launches" \
 				'/stop 					-- to stop the bot'
 
 	# BOTfather format
@@ -80,6 +93,7 @@ class Interface:
 	subscribe - to get alerts 5 min before the launch
 	unsubscribe - to disable it
 	stop - to stop the bot
+	last_week - to send last week's launches
 	'''
 	# TODO add exit_message
 	exit_message = 'ddddd'

@@ -16,6 +16,7 @@ from telegram.ext import (CommandHandler, ConversationHandler, Filters, Job,
 
 from bot_base import base
 from bot_interface import interface
+from bot_lastweek import lastweek
 from bot_logging import logger, scheduler
 from bot_usersettings import users
 from bot_sender import sender
@@ -80,6 +81,11 @@ def stop(bot, update):
 
 def help(bot, update):
 	update.message.reply_text(interface.help_message)
+
+def last_week(bot, update):
+	msgs = lastweek.get_all()
+	for msg in msgs:
+		sender.Send(update.message.chat_id, msg)
 	
 def main():
 	# TODO show notif of the ongoing launch mission if one is happening while your chat
@@ -110,8 +116,10 @@ def main():
 	dp.add_handler(CommandHandler('stop', stop))
 
 	dp.add_handler(CommandHandler("help", help))
-	dp.add_handler(CommandHandler('next', SendNext, 
+	dp.add_handler(CommandHandler('next', SendNext,
 								pass_args=True))
+
+	dp.add_handler(CommandHandler('last_week', last_week))
 
 	dp.add_handler(CommandHandler('subscribe', subscribe))
 	dp.add_handler(CommandHandler('unsubscribe', unsubscribe))
