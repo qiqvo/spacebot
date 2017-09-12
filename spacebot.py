@@ -16,6 +16,7 @@ from telegram.ext import (CommandHandler, ConversationHandler, Filters, Job,
 
 from bot_base import base
 from bot_interface import interface
+from bot_command import Command
 from bot_logging import logger, scheduler
 from bot_usersettings import users
 from bot_sender import sender
@@ -80,6 +81,13 @@ def stop(bot, update):
 
 def help(bot, update):
 	update.message.reply_text(interface.help_message)
+
+def TextHandle(bot, update):
+	text = update.message.text
+	if text[0] == '/':
+		Command(update.message.chat_id, text[1:])
+	else:
+		pass
 	
 def main():
 	# TODO show notif of the ongoing launch mission if one is happening while your chat
@@ -94,6 +102,8 @@ def main():
 	# TODO make a full python lib for the source site ;;launchlibrary;;
 
 	# TODO last week till now base of launches
+
+	# TODO send aditional info on every request
 
 	token = ''
 	if os.path.isfile('_token.token'):
@@ -118,6 +128,9 @@ def main():
 	dp.add_handler(CommandHandler('send_uncertain_launches', send_uncertain_launches, pass_chat_data=True))
 	# dp.add_handler(CommandHandler('send_non_video_launches', send_non_video_launches,
 	# 							pass_chat_data=True, pass_args=True))
+
+	dp.add_handler(MessageHandler(Filters.text, TextHandle))
+
 	# log all errors
 	dp.add_error_handler(error)
 
