@@ -79,11 +79,11 @@ class Interface:
 				'/help                  -- to get this msg\n' \
 				'/next         			-- to get the following launch\n' \
 				'/next <num> 			-- to get the following 4 launches\n' \
-				'/send_uncertain_launches -- to send uncertain launches. Send once more to discard' \
-				'/subscribe             -- to get alerts 5 min before the launch' \
-				'/unsubscribe           -- to disable it' \
-				"/last_week				-- to send last week's launches" \
-				'/stop 					-- to stop the bot'
+				'/send_uncertain_launches -- to send uncertain launches. Send once more to discard\n' \
+				'/subscribe             -- to get alerts 5 min before the launch\n' \
+				'/unsubscribe           -- to disable it\n' \
+				"/last_week				-- to send last week's launches\n" \
+				'/stop 					-- to stop the bot\n'
 
 	# BOTfather format
 	'''
