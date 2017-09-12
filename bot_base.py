@@ -14,6 +14,7 @@ import requests
 from bot_logging import logger, scheduler
 from bot_sender import sender
 from bot_usersettings import users
+from bot_lastweek import lastweek
 
 
 # Modes are list, summary, verbose
@@ -65,7 +66,7 @@ class Base:
 	a table which is sorted by 'time'
 	id#time# other event props:...name#...
 	"""
-	k_table_size = 10
+	k_table_size = 100
 	table = []
 	jobs = []
 
@@ -100,7 +101,7 @@ class Base:
 				trigger='date', run_date=event['when'].shift(minutes=1).datetime)
 
 			self.jobs.append({
-				'id': event['id'], 
+				'id': event['id'],
 				'job_start' :  job_start,
 				'job_remove' : job_remove})
 
@@ -110,11 +111,21 @@ class Base:
 		logger.info('removing the first event in table')
 		if self.table[0]['when'] < arrow.now():
 			logger.warning('the event you are removing is not yet come')
+		else:
+			lastweek.add_event(self.table[0])
 
 		del self.table[0]
 
 	def get_next_events(self, count):
-		return self.table[:count]
+		if count > self.k_table_size:
+			launches = pick_info(count)
+			events = []
+			for launch in launches:
+				event = create_event(launch)
+				events.append(event)
+			return events
+		else:
+			return self.table[:count]
 
 	def get_event(self, event_id):
 		for event in self.table:
