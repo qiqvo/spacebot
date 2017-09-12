@@ -63,10 +63,22 @@ class Interface:
 				'/help                  -- to get this msg\n' \
 				'/next         			-- to get the following launch\n' \
 				'/next <num> 			-- to get the following 4 launches\n' \
-				'/send_uncertain_launches -- to send ...' \
+				'/send_uncertain_launches -- to send uncertain launches. Send once more to discard' \
 				'/subscribe             -- to get alerts 5 min before the launch' \
 				'/unsubscribe           -- to disable it' \
-				''
+				'/stop 					-- to stop the bot'
+
+	# BOTfather format
+	'''
+	help - to get this msg
+	next - to get the following launch
+	send_uncertain_launches - to send uncertain launches. Send once more to discard
+	subscribe - to get alerts 5 min before the launch
+	unsubscribe - to disable it
+	stop - to stop the bot
+	'''
+	# TODO add exit_message
+	exit_message = 'ddddd'
 
 	# TODO write subscibe answer msg
 	subscribe_message = 'bla-fghjkl-bla' # you will be subscribed in 15 minutes at most! Thanks!
