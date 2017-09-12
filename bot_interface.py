@@ -20,6 +20,10 @@ class Interface:
 
 		return descr
 
+
+	# TODO probability coefs
+	# TODO if no vid, send pic
+	
 	@staticmethod
 	def generate_msg(props, alert=False, user_pref=None):
 		"""
