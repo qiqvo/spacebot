@@ -10,7 +10,6 @@ https://github.com/elamperti/spacebot/blob/master/spacebot.py
 
 import telegram
 
-from bot_cache import cache
 from bot_interface import interface
 from bot_logging import logger, scheduler
 from bot_usersettings import users, Preferences

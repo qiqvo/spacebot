@@ -87,7 +87,6 @@ class Interface:
 	# TODO write subscibe answer msg
 	subscribe_message = 'bla-fghjkl-bla' # you will be subscribed in 15 minutes at most! Thanks!
 	unsubscribe_message = 'bla-bla-bla' # you will be unsubscribed in 15 minutes at most!
-
-
+	
 
 interface = Interface()
