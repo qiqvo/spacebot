@@ -88,18 +88,12 @@ def last_week(bot, update):
 		sender.Send(update.message.chat_id, msg)
 	
 def main():
-	# TODO show notif of the ongoing launch mission if one is happening while your chat
+	# TODO show notif of the ongoing launch mission if one is happening while you chat
 
 	# TODO user settings: if to send msgs without videos
 	# 					  if to send uncertain launches
-	# 					  if to send pictures in what resolution is preferable
-
-	# TODO make available more info about the launch
-	#	   maybe send launch id and make a func '/more_info id 1234'
 
 	# TODO make a full python lib for the source site ;;launchlibrary;;
-
-	# TODO last week till now base of launches
 
 	token = ''
 	if os.path.isfile('_token.token'):

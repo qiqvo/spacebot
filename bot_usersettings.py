@@ -9,11 +9,6 @@ https://github.com/elamperti/spacebot/blob/master/spacebot.py
 """
 
 """
-implement folloing TODO instr
-	# TODO user settings: if to send msgs without videos
-	# 					  if to send uncertain launches
-	# 					  if to send pictures in what resolution is preferable
-
 user_preferences should be saved in a file
 #user_id  --   preference code 
 
