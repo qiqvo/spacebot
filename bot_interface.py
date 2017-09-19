@@ -48,7 +48,7 @@ class Interface:
 		message += ' *' + props['name'] + '*' + '\n'
 
 		if not alert:
-			message += 'A launch will happen _' + props['when'].humanize() + '_! '
+			message += 'A launch will happen _' + props['when'].humanize() + '_! \n'
 			message += 'I mean ' + props['when'].format('YYYY-MM-DD HH:mm:ss ZZ') + '\n'
 
 		message += 'Taking from *' + props['location'] + '*.\n'
@@ -72,13 +72,14 @@ class Interface:
 						'If you have any questions, ideas or difficulties using Spacebot, feel free to contact @qiqvo.'
 
 	help_message =  'usage: \n' \
-				'/help                  -- to get this message\n' \
-				'/next         			-- to get the next launch\n' \
-				'/next <num> 			-- to get the next <num> launches\n' \
-				'/send_uncertain_launches -- to send uncertain launches. Send once more to discard' \
-				'/subscribe             -- to get notifications 5 mins before a launch happens' \
-				'/unsubscribe           -- to disable notifications' \
-				'/stop 					-- to stop the bot'
+				'/help                  -- to get this msg\n' \
+				'/next         			-- to get the following launch\n' \
+				'/next <num> 			-- to get the following 4 launches\n' \
+				'/send_uncertain_launches -- to send uncertain launches. Send once more to discard\n' \
+				'/subscribe             -- to get alerts 5 min before the launch\n' \
+				'/unsubscribe           -- to disable it\n' \
+				"/last_week				-- to send last week's launches\n" \
+				'/stop 					-- to stop the bot\n'
 
 	# BOTfather format
 	'''
@@ -89,6 +90,7 @@ class Interface:
 	unsubscribe - to disable it
 	stop - to stop the bot
 	'''
+
 	exit_message = 'Bot stopped. If there are any problems you encountered and would like to report, please contact @qiqvo. Thank you for using Spacebot!'
 
 	send_uncertain_launches_activated_msg = 'You have actived sending of uncertain launches.'
