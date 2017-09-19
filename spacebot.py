@@ -34,9 +34,18 @@ def unsubscribe(bot, update):
 	users.change(modify=[user_id, ['send_5_min_before_launch_alert', False]])
 	update.message.reply_text(interface.unsubscribe_message)
 
-def send_uncertain_launches(bot, update):
+def send_uncertain_launches(bot, update, chat_data):
 	user_id = update.message.chat_id
-	users.change(modify=[user_id, ['send_uncertain_launches', True]])
+	if 'send_uncertain_launches' in chat_data:
+		if chat_data['send_uncertain_launches']:
+			logger.info('User %s deactivated send_uncertain_launches' % user_id)
+			chat_data['send_uncertain_launches'] = False
+			users.change(modify=[user_id, ['send_uncertain_launches', False]])
+			return
+	else:
+		logger.info('User %s activated send_uncertain_launches' % user_id)
+		chat_data['send_uncertain_launches'] = True
+		users.change(modify=[user_id, ['send_uncertain_launches', True]])
 
 def SendNext(bot, update, args):
 	count = 1
@@ -56,22 +65,32 @@ def start(bot, update):
 	update.message.reply_text(interface.welcome_message)
 	user = update.message.from_user
 	logger.info('new user %s' % user.first_name)
-	users.add_user(user_id)
-	help(bot, update)
+	if user_id in users.users:
+		users.change(undo_remove=user_id)
+		sender.Send(user_id, 'Your profile is restored!')
+	else:
+		users.add_user(user_id)
+		help(bot, update)
+
+def stop(bot, update):
+	user_id = update.message.chat_id
+	logger.info('User %s stopped the bot' % user_id)
+	update.message.reply_text(interface.exit_message)
+	users.change(remove=user_id)
 
 def help(bot, update):
 	update.message.reply_text(interface.help_message)
 	
 def main():
-	# TODO show notif of the ongoing launch mission if one is happening while your chat 
-	# TODO probability coefs
-	# TODO if no vid, send pic 
-	# TODO add user setting chat with 15 min update and 'only last change matters'
+	# TODO show notif of the ongoing launch mission if one is happening while your chat
+
 	# TODO user settings: if to send msgs without videos
 	# 					  if to send uncertain launches
 	# 					  if to send pictures in what resolution is preferable
+
 	# TODO make available more info about the launch
 	#	   maybe send launch id and make a func '/more_info id 1234'
+
 	# TODO make a full python lib for the source site ;;launchlibrary;;
 
 	# TODO last week till now base of launches
@@ -88,13 +107,15 @@ def main():
 
 	# on different commands - answer in Telegram
 	dp.add_handler(CommandHandler("start", start))
+	dp.add_handler(CommandHandler('stop', stop))
+
 	dp.add_handler(CommandHandler("help", help))
 	dp.add_handler(CommandHandler('next', SendNext, 
 								pass_args=True))
 
 	dp.add_handler(CommandHandler('subscribe', subscribe))
 	dp.add_handler(CommandHandler('unsubscribe', unsubscribe))
-	dp.add_handler(CommandHandler('send_uncertain_launches', send_uncertain_launches))
+	dp.add_handler(CommandHandler('send_uncertain_launches', send_uncertain_launches, pass_chat_data=True))
 	# dp.add_handler(CommandHandler('send_non_video_launches', send_non_video_launches,
 	# 							pass_chat_data=True, pass_args=True))
 	# log all errors

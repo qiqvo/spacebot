@@ -10,7 +10,6 @@ https://github.com/elamperti/spacebot/blob/master/spacebot.py
 
 import telegram
 
-from bot_cache import cache
 from bot_interface import interface
 from bot_logging import logger, scheduler
 from bot_usersettings import users, Preferences
@@ -31,8 +30,6 @@ class Sender:
 				if msg:
 					self.Send(user_id, msg)
 
-
-	# TODO check if telegram.ParseMode.MARKDOWN works correctly
 	def Send(self, user_id, msg):
 		self.bot.send_message(user_id, text=msg,
 				parse_mode=telegram.ParseMode.MARKDOWN)

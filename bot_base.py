@@ -11,7 +11,6 @@ https://github.com/elamperti/spacebot/blob/master/spacebot.py
 import arrow
 import requests
 
-from bot_cache import cache
 from bot_logging import logger, scheduler
 from bot_sender import sender
 from bot_usersettings import users
