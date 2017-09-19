@@ -43,29 +43,20 @@ class Interface:
 				holdreason
 		"""
 		message =  emojize(":rocket:", use_aliases=True)
-		if past:
-			message += ' Launch was held on: ' + props['when'].format('YYYY-MM-DD HH:mm:ss ZZ') + '.\n'
-		else:
-			if alert:
-				message += ' *Launch is going to happen in some minutes!* '
+		if alert:
+			message += ' *Launch is going to happen in some minutes!* '
 		message += ' *' + props['name'] + '*' + '\n'
 
-		if not alert and not past:
+		if not alert:
 			message += 'A launch will happen _' + props['when'].humanize() + '_! '
 			message += 'I mean ' + props['when'].format('YYYY-MM-DD HH:mm:ss ZZ') + '\n'
 
-		if past:
-			message += 'Taken from *'
-		else:
-			message += 'Taking from *'
-
-		message += props['location'] + '*.\n'
+		message += 'Taking from *' + props['location'] + '*.\n'
 
 		message += '*Mission description*\n' + Interface.generate_description(props['missions']) + '\n\n'
 
-
 		if props['urls']:
-			message += 'Watch it here: \n' if not past else 'You could have watched it here: \n'
+			message += 'Watch it here: \n'
 			for url in props['urls']:
 				message += '  • [' + url + '](' + url +')\n'
 		else:
@@ -76,19 +67,18 @@ class Interface:
 
 		return message
 
-
 	welcome_message = 'Hi! Nice to have you on board. '  \
-						'We are to take off the planet at... '
+						'We are to take off the planet at... \n' \
+						'If you have any questions, ideas or difficulties using Spacebot, feel free to contact @qiqvo.'
 
 	help_message =  'usage: \n' \
-				'/help                  -- to get this msg\n' \
-				'/next         			-- to get the following launch\n' \
-				'/next <num> 			-- to get the following 4 launches\n' \
-				'/send_uncertain_launches -- to send uncertain launches. Send once more to discard\n' \
-				'/subscribe             -- to get alerts 5 min before the launch\n' \
-				'/unsubscribe           -- to disable it\n' \
-				"/last_week				-- to send last week's launches\n" \
-				'/stop 					-- to stop the bot\n'
+				'/help                  -- to get this message\n' \
+				'/next         			-- to get the next launch\n' \
+				'/next <num> 			-- to get the next <num> launches\n' \
+				'/send_uncertain_launches -- to send uncertain launches. Send once more to discard' \
+				'/subscribe             -- to get notifications 5 mins before a launch happens' \
+				'/unsubscribe           -- to disable notifications' \
+				'/stop 					-- to stop the bot'
 
 	# BOTfather format
 	'''
@@ -98,17 +88,14 @@ class Interface:
 	subscribe - to get alerts 5 min before the launch
 	unsubscribe - to disable it
 	stop - to stop the bot
-	last_week - to send last week's launches
 	'''
-	# TODO add exit_message
-	exit_message = 'ddddd'
+	exit_message = 'Bot stopped. If there are any problems you encountered and would like to report, please contact @qiqvo. Thank you for using Spacebot!'
 
 	send_uncertain_launches_activated_msg = 'You have actived sending of uncertain launches.'
 	send_uncertain_launches_deactivated_msg = 'You have deactivated sending of uncertain launches.'
 
-	# TODO write subscibe answer msg
-	subscribe_message = 'bla-fghjkl-bla' # you will be subscribed in 15 minutes at most! Thanks!
-	unsubscribe_message = 'bla-bla-bla' # you will be unsubscribed in 15 minutes at most!
-	
+	subscribe_message = 'Thank you for subscribing! Please note that it usually takes us around 15 minutes to subscribe you to our notifications.' 
+	unsubscribe_message = 'You will be unsubscribed in 15 minutes at most.'
+
 
 interface = Interface()
