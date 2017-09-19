@@ -42,11 +42,14 @@ def send_uncertain_launches(bot, update, chat_data):
 			logger.info('User %s deactivated send_uncertain_launches' % user_id)
 			chat_data['send_uncertain_launches'] = False
 			users.change(modify=[user_id, ['send_uncertain_launches', False]])
+			sender.Send(user_id, interface.send_uncertain_launches_deactivated_msg)
 			return
 	else:
 		logger.info('User %s activated send_uncertain_launches' % user_id)
 		chat_data['send_uncertain_launches'] = True
 		users.change(modify=[user_id, ['send_uncertain_launches', True]])
+		sender.Send(user_id, interface.send_uncertain_launches_activated_msg)
+
 
 def SendNext(bot, update, args):
 	count = 1
