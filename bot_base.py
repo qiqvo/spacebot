@@ -57,7 +57,7 @@ def create_event(launch):
 		#"rocket": launch['rocket']['name']
 		'pads': launch['location']['pads'],
 		'location' : launch['location']['name'],
-		'failreason' : launch['failreason'], 
+		'failreason' : launch['failreason'],
 		'holdreason' : launch['holdreason']
 	}
 
