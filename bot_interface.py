@@ -43,20 +43,27 @@ class Interface:
 				holdreason
 		"""
 		message =  emojize(":rocket:", use_aliases=True)
-		if alert:
-			message += ' *Launch is going to happen in some minutes!* '
+		if past:
+			message += ' Launch was held on: ' + props['when'].format('YYYY-MM-DD HH:mm:ss ZZ') + '.\n'
+		else:
+			if alert:
+				message += ' *Launch is going to happen in some minutes!* '
 		message += ' *' + props['name'] + '*' + '\n'
 
-		if not alert:
+		if not alert and not past:
 			message += 'A launch will happen _' + props['when'].humanize() + '_! \n'
 			message += 'I mean ' + props['when'].format('YYYY-MM-DD HH:mm:ss ZZ') + '\n'
 
-		message += 'Taking from *' + props['location'] + '*.\n'
+		if past:
+			message += 'Taken from *'
+		else:
+			message += 'Taking from *'
 
+		message += props['location'] + '*.\n'
 		message += '*Mission description*\n' + Interface.generate_description(props['missions']) + '\n\n'
 
 		if props['urls']:
-			message += 'Watch it here: \n'
+			message += 'Watch it here: \n' if not past else 'You could have watched it here: \n'
 			for url in props['urls']:
 				message += '  • [' + url + '](' + url +')\n'
 		else:
@@ -78,7 +85,7 @@ class Interface:
 				'/send_uncertain_launches -- to send uncertain launches. Send once more to discard\n' \
 				'/subscribe             -- to get alerts 5 min before the launch\n' \
 				'/unsubscribe           -- to disable it\n' \
-				"/last_week				-- to send last week's launches\n" \
+				"/last_week				-- to send last 3 weeks' launches\n" \
 				'/stop 					-- to stop the bot\n'
 
 	# BOTfather format
@@ -89,6 +96,7 @@ class Interface:
 	subscribe - to get alerts 5 min before the launch
 	unsubscribe - to disable it
 	stop - to stop the bot
+	last_week - to send last 3 weeks' launches
 	'''
 
 	exit_message = 'Bot stopped. If there are any problems you encountered and would like to report, please contact @qiqvo. Thank you for using Spacebot!'
