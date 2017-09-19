@@ -39,7 +39,7 @@ class Interface:
 		"""
 		message =  emojize(":rocket:", use_aliases=True)
 		if alert:
-			message += ' *A launch is going to happen in some minutes!* '
+			message += ' *Launch is going to happen in some minutes!* '
 		message += ' *' + props['name'] + '*' + '\n'
 
 		if not alert:
@@ -84,7 +84,7 @@ class Interface:
 	exit_message = 'Bot stopped. If there are any problems you encountered and would like to report, please contact @qiqvo. Thank you for using Spacebot!'
 
 	subscribe_message = 'Thank you for subscribing! Please note that it usually takes us around 15 minutes to subscribe you to our notifications.' 
-	unsubscribe_message = 'You will be unsubscribed in 15 minutes at most.' 
+	unsubscribe_message = 'You will be unsubscribed in 15 minutes at most.'
 	
 
 interface = Interface()
