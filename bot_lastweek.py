@@ -10,7 +10,7 @@ class LastWeek:
 	table = []
 
 	def add_event(self, event):
-		'adds event and sets schedular to remove it in 8 days'
+		'adds event and sets schedular to remove it in 22 days'
 		self.table.append(interface.generate_msg(event, past=True))
 		scheduler.add_job(self.remove_first,
 			trigger='date', run_date=event['when'].shift(days=+22).datetime)
@@ -19,9 +19,7 @@ class LastWeek:
 		del self.table[0]
 
 	def get_all(self):
-		if self.table:
-			return self.table
-		else:
+		if not self.table:
 			from bot_base import create_event
 			logger.info("Picking launches...")
 			start_date = arrow.utcnow().shift(days=-21).format('YYYY-MM-DD')
@@ -31,13 +29,15 @@ class LastWeek:
 
 			if r.status_code == 200:
 				raw = r.json()['launches']
-				try:
-					for item in raw:
-						event = create_event(item)
-						self.add_event(event)
-				except:
+				for item in raw:
+					event = create_event(item)
+					self.add_event(event)
+				if len(raw) < 2:
 					logger.error('There is only one or NONE event happend over the last three weeks. Earth might have been occupied.')
 			else:
 				logger.error('Error: bad request, while picking in LASTWEEK')
+				return None
+		
+		return self.table
 
 lastweek = LastWeek()
