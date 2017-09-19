@@ -23,7 +23,8 @@ class Interface:
 
 	# TODO probability coefs
 	# TODO if no vid, send pic
-	
+
+	# TODO add failreason, holdreason
 	@staticmethod
 	def generate_msg(props, alert=False, user_pref=None, past=False):
 		"""
@@ -36,6 +37,10 @@ class Interface:
 			missions is a list (in each may be present ['description'])
 			pads is a list
 			location is a str (country name)
+
+			if past:
+				failreason
+				holdreason
 		"""
 		message =  emojize(":rocket:", use_aliases=True)
 		if past:
@@ -62,19 +67,19 @@ class Interface:
 		if props['urls']:
 			message += 'Watch it here: \n' if not past else 'You could have watched it here: \n'
 			for url in props['urls']:
-				message += '  • ' + url + '\n'
+				message += '  • [' + url + '](' + url +')\n'
 		else:
-			message += 'Unfortunately there'
+			message += 'Unfortunately there '
 			message += 'are' if not past else 'were'
-			message += 'no reported webcasts ' \
+			message += ' no reported webcasts ' \
 					   + emojize(':disappointed_relieved:', use_aliases=True)
 
 		return message
 
 
 	welcome_message = 'Hi! Nice to have you on board. '  \
-						'We are to take off the planet at... '  \
-						"It's hard to tell not knowing your timezone."
+						'We are to take off the planet at... '
+
 	help_message =  'usage: \n' \
 				'/help                  -- to get this msg\n' \
 				'/next         			-- to get the following launch\n' \
@@ -97,6 +102,9 @@ class Interface:
 	'''
 	# TODO add exit_message
 	exit_message = 'ddddd'
+
+	send_uncertain_launches_activated_msg = 'You have actived sending of uncertain launches.'
+	send_uncertain_launches_deactivated_msg = 'You have deactivated sending of uncertain launches.'
 
 	# TODO write subscibe answer msg
 	subscribe_message = 'bla-fghjkl-bla' # you will be subscribed in 15 minutes at most! Thanks!
