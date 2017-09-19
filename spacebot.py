@@ -98,6 +98,7 @@ def main():
 
 	# TODO make a full python lib for the source site ;;launchlibrary;;
 
+	# TODO show last failed 
 	token = ''
 	if os.path.isfile('_token.token'):
 		with open('_token.token', 'r') as tokenFile:
