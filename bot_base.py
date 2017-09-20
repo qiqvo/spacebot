@@ -56,7 +56,9 @@ def create_event(launch):
 		"missions": launch['missions'],
 		#"rocket": launch['rocket']['name']
 		'pads': launch['location']['pads'],
-		'location' : launch['location']['name']
+		'location' : launch['location']['name'],
+		'failreason' : launch['failreason'],
+		'holdreason' : launch['holdreason']
 	}
 
 	return event
@@ -73,6 +75,7 @@ class Base:
 	def update(self):
 		logger.info("Updating launches")
 		launches = pick_info(self.k_table_size)
+		lastweek.update()
 		
 		# TODO dont reset the whole table -- just update the content and sort by date
 		logger.info('resetting table of events')
