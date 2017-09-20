@@ -65,8 +65,10 @@ class Interface:
 			for url in props['urls']:
 				message += '  • [' + url + '](' + url +')\n'
 		if past:
-			if holdreason: message += 'The launch has been held. Reason: ' + holdreason 
-			if failreason: message += 'Unfortunately, the launch failed. Reason: ' + failreason
+			if props['holdreason']:
+				message += 'The launch has been *held*. Reason: ' + props['holdreason'] + '\n'
+			if props['failreason']:
+				message += 'Unfortunately, the launch *failed*. Reason: ' + props['failreason'] + '\n'
 		else:
 			message += 'Unfortunately there '
 			message += 'are' if not past else 'were'
