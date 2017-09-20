@@ -23,8 +23,6 @@ class Interface:
 
 	# TODO probability coefs
 	# TODO if no vid, send pic
-
-	# TODO add failreason, holdreason
 	@staticmethod
 	def generate_msg(props, alert=False, user_pref=None, past=False):
 		"""
@@ -59,6 +57,9 @@ class Interface:
 			message += 'Watch it here: \n'
 			for url in props['urls']:
 				message += '  • [' + url + '](' + url +')\n'
+		if past:
+			if holdreason: message += 'The launch has been held. Reason: ' + holdreason 
+			if failreason: message += 'Unfortunately, the launch failed. Reason: ' + failreason
 		else:
 			message += 'Unfortunately there '
 			message += 'are' if not past else 'were'
