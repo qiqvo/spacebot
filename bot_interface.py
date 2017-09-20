@@ -43,6 +43,10 @@ class Interface:
 		message =  emojize(":rocket:", use_aliases=True)
 		if past:
 			message += ' Launch was held on: ' + props['when'].format('YYYY-MM-DD HH:mm:ss ZZ') + '.\n'
+			if props['holdreason']:
+				message += 'The launch has been *held*. Reason: ' + props['holdreason'] + '\n'
+			if props['failreason']:
+				message += 'Unfortunately, the launch *failed*. Reason: ' + props['failreason'] + '\n'
 		else:
 			if alert:
 				message += ' *Launch is going to happen in some minutes!* '
@@ -58,17 +62,14 @@ class Interface:
 			message += 'Taking from *'
 
 		message += props['location'] + '*.\n'
-		message += '*Mission description*\n' + Interface.generate_description(props['missions']) + '\n\n'
+		descr = Interface.generate_description(props['missions'])
+		message += '*Mission description*\n' + descr + '\n' if descr else ''
+		message += '\n'
 
 		if props['urls']:
 			message += 'Watch it here: \n' if not past else 'You could have watched it here: \n'
 			for url in props['urls']:
 				message += '  • [' + url + '](' + url +')\n'
-		if past:
-			if props['holdreason']:
-				message += 'The launch has been *held*. Reason: ' + props['holdreason'] + '\n'
-			if props['failreason']:
-				message += 'Unfortunately, the launch *failed*. Reason: ' + props['failreason'] + '\n'
 		else:
 			message += 'Unfortunately there '
 			message += 'are' if not past else 'were'
