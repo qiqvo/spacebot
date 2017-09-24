@@ -98,7 +98,8 @@ class Users:
 		if remove:
 			self._to_remove.add(remove)
 		if undo_remove:
-			self._to_remove.remove(undo_remove)
+			if undo_remove in self._to_remove:
+				self._to_remove.remove(undo_remove)
 		if modify:
 			user_id = modify[0]
 			what = modify[1][0]
@@ -106,11 +107,16 @@ class Users:
 			if user_id in self._to_modify:
 				self._to_modify[user_id][what] = val
 			else:
-				self._to_modify[user_id] = dict(what=val)
+				tmp_d = dict()
+				tmp_d[what] = val
+				self._to_modify[user_id] = tmp_d
 
 	def _change(self):
 		self._change_list()
 		self._change_file()
+
+		self._to_modify.clear()
+		self._to_remove.clear()
 
 	def _change_list(self):
 		for user in self.users:

@@ -23,40 +23,40 @@ from bot_sender import sender
 
 
 def subscribe(bot, update):
-	user_id = update.message.chat_id
+	user_id = str(update.message.chat_id)
 	logger.info('Subscribe user %s' % user_id)
 	users.change(modify=[user_id, ['send_5_min_before_launch_alert', True]])
 	update.message.reply_text(interface.subscribe_message)
 	# TODO add user setting to send in time
 
 def unsubscribe(bot, update):
-	user_id = update.message.chat_id
+	user_id = str(update.message.chat_id)
 	logger.info('Unsubscribe user %s' % user_id)
 	users.change(modify=[user_id, ['send_5_min_before_launch_alert', False]])
 	update.message.reply_text(interface.unsubscribe_message)
 
 def send_uncertain_launches(bot, update, chat_data):
-	user_id = update.message.chat_id
-	if 'send_uncertain_launches' in chat_data:
-		if chat_data['send_uncertain_launches']:
-			logger.info('User %s deactivated send_uncertain_launches' % user_id)
-			chat_data['send_uncertain_launches'] = False
-			users.change(modify=[user_id, ['send_uncertain_launches', False]])
-			sender.Send(user_id, interface.send_uncertain_launches_deactivated_msg)
-			return
-	else:
-		logger.info('User %s activated send_uncertain_launches' % user_id)
-		chat_data['send_uncertain_launches'] = True
-		users.change(modify=[user_id, ['send_uncertain_launches', True]])
-		sender.Send(user_id, interface.send_uncertain_launches_activated_msg)
+	user_id = str(update.message.chat_id)
 
+	if 'send_uncertain_launches' in chat_data:
+		chat_data['send_uncertain_launches'] = not chat_data['send_uncertain_launches']
+	else:
+		chat_data['send_uncertain_launches'] = False
+
+	logger.info('User %s changed send_uncertain_launches to %r' % (user_id, chat_data['send_uncertain_launches']))
+
+	users.change(modify=[user_id, ['send_uncertain_launches', chat_data['send_uncertain_launches']]])
+	if chat_data['send_uncertain_launches']:
+		sender.Send(user_id, interface.send_uncertain_launches_activated_msg)
+	else:
+		sender.Send(user_id, interface.send_uncertain_launches_deactivated_msg)
 
 def SendNext(bot, update, args):
 	count = 1
 	if args:
 		count = int(args[0])
 
-	user_id = update.message.chat_id
+	user_id = str(update.message.chat_id)
 	logger.info("Sending user %s next %d events" % (user_id, count))
 	sender.SendNext(user_id, count)
 
@@ -64,7 +64,7 @@ def error(bot, update, error):
 	logger.warning('Update "%s" caused error "%s"' % (update, error))
 
 def start(bot, update):
-	user_id = update.message.chat_id
+	user_id = str(update.message.chat_id)
 	logger.info('Starting with user %s' % user_id)
 	update.message.reply_text(interface.welcome_message)
 	user = update.message.from_user
@@ -77,7 +77,7 @@ def start(bot, update):
 		help(bot, update)
 
 def stop(bot, update):
-	user_id = update.message.chat_id
+	user_id = str(update.message.chat_id)
 	logger.info('User %s stopped the bot' % user_id)
 	update.message.reply_text(interface.exit_message)
 	users.change(remove=user_id)
@@ -129,9 +129,12 @@ def main():
 
 	base.update()
 	scheduler.add_job(base.update, 'interval', hours=5)
-	
+
 	users.get_from_file()
 	scheduler.add_job(users._change, 'interval', minutes=15)
+
+	lastweek.update()
+	scheduler.add_job(lastweek.update, 'interval', hours=24)
 	
 	scheduler.start()
 

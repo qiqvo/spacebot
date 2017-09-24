@@ -75,8 +75,7 @@ class Base:
 	def update(self):
 		logger.info("Updating launches")
 		launches = pick_info(self.k_table_size)
-		lastweek.update()
-		
+
 		# TODO dont reset the whole table -- just update the content and sort by date
 		logger.info('resetting table of events')
 		logger.info('Removing prev entries')
@@ -100,7 +99,7 @@ class Base:
 			job_start = scheduler.add_job(sender.SendAll,
 				trigger='date', run_date=event['when'].shift(minutes=-5).datetime,
 				args=[event['id']])
-			job_remove = scheduler.add_job(self.remove_first, 
+			job_remove = scheduler.add_job(self.remove_first,
 				trigger='date', run_date=event['when'].shift(minutes=1).datetime)
 
 			self.jobs.append({

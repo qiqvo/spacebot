@@ -37,8 +37,12 @@ class Sender:
 	def SendNext(self, user_id, count):
 		from bot_base import base
 		events = base.get_next_events(count)
+		prefs = None
+		if user_id in users.users:
+			prefs = users.users[user_id].prefs
+
 		for event in events:
-			msg = interface.generate_msg(event, user_pref=users.users[user_id].prefs)
+			msg = interface.generate_msg(event, user_pref=prefs)
 			self.Send(user_id, msg)
 
 sender = Sender()
