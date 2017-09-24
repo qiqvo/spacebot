@@ -37,18 +37,19 @@ def unsubscribe(bot, update):
 
 def send_uncertain_launches(bot, update, chat_data):
 	user_id = str(update.message.chat_id)
-	logger.info('User %s changed send_uncertain_launches' % user_id)
 
 	if 'send_uncertain_launches' in chat_data:
 		chat_data['send_uncertain_launches'] = not chat_data['send_uncertain_launches']
 	else:
-		chat_data['send_uncertain_launches'] = True
+		chat_data['send_uncertain_launches'] = False
+
+	logger.info('User %s changed send_uncertain_launches to %r' % (user_id, chat_data['send_uncertain_launches']))
 
 	users.change(modify=[user_id, ['send_uncertain_launches', chat_data['send_uncertain_launches']]])
 	if chat_data['send_uncertain_launches']:
-		sender.Send(user_id, interface.send_uncertain_launches_deactivated_msg)
-	else:
 		sender.Send(user_id, interface.send_uncertain_launches_activated_msg)
+	else:
+		sender.Send(user_id, interface.send_uncertain_launches_deactivated_msg)
 
 def SendNext(bot, update, args):
 	count = 1

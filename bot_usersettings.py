@@ -114,7 +114,7 @@ class Users:
 	def _change(self):
 		self._change_list()
 		self._change_file()
-		
+
 		self._to_modify.clear()
 		self._to_remove.clear()
 
